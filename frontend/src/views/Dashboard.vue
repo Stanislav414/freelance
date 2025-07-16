@@ -5,7 +5,9 @@
       <aside class="w-72 flex flex-col gap-6">
         <UserDropdown :user="user" @logout="logout" />
         <nav class="flex flex-col gap-2 bg-[#0D1F31] rounded-4xl w-full p-4">
-          <div v-for="item in menu" :key="item.label" class="flex items-center gap-3 p-3 rounded-2xl hover:bg-[#146AF128] cursor-pointer">
+          <div v-for="item in menu" :key="item.label" class="flex items-center gap-3 p-3 rounded-2xl hover:bg-[#146AF128] cursor-pointer"
+            :class="{ 'bg-[#22304a]': currentTab === item.value }"
+            @click="currentTab = item.value">
             <img src="@/assets/orders.png" class="w-8 h-8" alt="icon" />
             <span>{{ item.label }}</span>
           </div>
@@ -15,55 +17,34 @@
 
       <!-- Центральная часть -->
       <main class="flex-1 flex flex-col gap-8">
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-4 justify-between">
           <input type="text" placeholder="Поиск" class="bg-[#0D1F31] text-white px-5 py-3 rounded-4xl w-full focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          
         </div>
         <section>
-          <h2 class="text-xl font-bold mb-4">Все заказы</h2>
-          <div v-if="orders.length === 0" class="text-center text-white mt-8">Нет заказов</div>
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div
-              v-for="order in orders"
-              :key="order.id"
-              class="bg-[#0D1F31] rounded-3xl p-6 flex flex-col gap-4 shadow-lg relative hover:bg-[#146AF128] cursor-pointer transition-colors"
-              @click="openOrderModal(order)"
-            >
-              <!-- Верх: название и статус -->
-              <div class="flex items-center gap-3 mb-2">
-                <h3 class="text-lg font-semibold flex-1">{{ order.title }}</h3>
-                <span
-                  v-if="statusText(order.status)"
-                  class="px-3 py-1 rounded-full text-xs font-semibold"
-                  :class="statusClass(order.status)"
-                >
-                  {{ statusText(order.status) }}
-                </span>
-              </div>
-              <!-- Срок -->
-              <div class="text-sm text-gray-400 mb-2">
-                До {{ order.deadline ? formatDate(order.deadline) : '—' }}
-              </div>
-              <!-- Описание/комментарий -->
-              <div class="flex items-center gap-3 bg-[#19223a] rounded-xl p-3 mb-2">
-                <img
-                  v-if="order.user && order.user.avatar"
-                  :src="order.user.avatar"
-                  class="w-8 h-8 rounded-full object-cover"
-                  alt="аватар"
-                />
-                <div>
-                  <div class="font-semibold text-sm">{{ order.user?.name || '—' }}</div>
-                  <div class="text-xs text-gray-300 truncate max-w-xs">
-                    {{ order.description || 'Нет описания' }}
-                  </div>
-                </div>
-              </div>
-              <!-- Стоимость -->
-              <div class="flex items-center mt-auto">
-                <div class="text-xs text-gray-400 mr-2">Вы получите</div>
-                <div class="text-lg font-bold">{{ order.budget ? order.budget + '₽' : '—' }}</div>
-              </div>
+          <div class="orders-header-row mb-4 flex items-center justify-between gap-4">
+            <h2 class="text-xl font-bold">{{ currentTabLabel }}</h2>
+            <div class="order-filter-box gap-2">
+              <select v-model="statusFilter" class="order-filter-select">
+                <option value="all">Все статусы</option>
+                <option value="open">Открыт</option>
+                <option value="in_progress">В работе</option>
+        
+              </select>
+              <select v-model="workTypeFilter" class="order-filter-select">
+                <option value="all">Все типы</option>
+                <option v-for="type in workTypes" :key="type.id" :value="type.id">{{ type.name }}</option>
+              </select>
             </div>
+          </div>
+          <div v-if="filteredOrders.length === 0" class="text-center text-white mt-8">Нет заказов</div>
+          <div v-else class="orders-grid">
+            <OrderCard
+              v-for="order in filteredOrders"
+              :key="order.id"
+              :order="mapOrder(order)"
+              @take="openOrderModal"
+            />
           </div>
         </section>
       </main>
@@ -80,8 +61,10 @@
     <transition name="fade">
       <OrderDetailsModal
         v-if="showOrderModal"
-        :order="selectedOrder"
+        :order="detailedOrder"
+        :loading="loadingOrder"
         @close="closeOrderModal"
+        @order-updated="onOrderUpdated"
       />
     </transition>
   </div>
@@ -91,10 +74,11 @@
 import CreateOrder from "./CreateOrder.vue";
 import UserDropdown from "../components/UserDropdown.vue";
 import performer from '@/assets/performer.png';
-import OrderDetailsModal from "./OrderDetailsModal.vue"; // Added import for OrderDetailsModal
+import OrderDetailsModal from "./OrderDetailsModal.vue";
+import OrderCard from "../components/OrderCard.vue";
 
 export default {
-  components: { CreateOrder, UserDropdown, OrderDetailsModal }, // Added OrderDetailsModal to components
+  components: { CreateOrder, UserDropdown, OrderDetailsModal, OrderCard },
   data() {
     return {
       user: {
@@ -103,19 +87,53 @@ export default {
       },
       orders: [],
       showCreateOrderModal: false,
-      selectedOrder: null, // Added for order details modal
-      showOrderModal: false, // Added for order details modal
+      detailedOrder: null, // Для подробного заказа
+      loadingOrder: false, // Для лоадера
+      showOrderModal: false, // Для модального окна
       menu: [
-        { label: 'Все заказы' },
-        { label: 'Заказы в работе' },
-        { label: 'Завершенные заказы' },
-        { label: 'Архив' },
-        { label: 'Чаты с исполнителями' },
-      ]
+        { label: 'Все заказы', value: 'all' },
+        { label: 'Заказы в работе', value: 'in_progress' },
+        { label: 'Завершенные заказы', value: 'done' },
+        { label: 'Архив', value: 'archive' },
+        { label: 'Сообщения', value: 'messages' },
+      ],
+      currentTab: 'all',
+      statusFilter: 'all',
+      workTypes: [],
+      workTypeFilter: 'all',
+    }
+  },
+  computed: {
+    filteredOrders() {
+      let base = [];
+      if (this.currentTab === 'all') {
+        base = this.orders.filter(o => o.status === 'open' || o.status === 'in_progress');
+      } else if (this.currentTab === 'in_progress') {
+        base = this.orders.filter(o =>
+          o.status === 'in_progress' &&
+          (o.executor_id === this.user.id || o.user_id === this.user.id)
+        );
+      } else if (this.currentTab === 'done') {
+        base = this.orders.filter(o => o.status === 'done' && (o.executor_id === this.user.id || o.user_id === this.user.id));
+      } else if (this.currentTab === 'archive') {
+        base = this.orders.filter(o => o.status === 'archived' && (o.executor_id === this.user.id || o.user_id === this.user.id));
+      } else if (this.currentTab === 'messages') {
+        base = [];
+      } else {
+        base = this.orders;
+      }
+      if (this.statusFilter !== 'all') base = base.filter(o => o.status === this.statusFilter);
+      if (this.workTypeFilter !== 'all') base = base.filter(o => String(o.work_type_id) === String(this.workTypeFilter));
+      return base;
+    },
+    currentTabLabel() {
+      const found = this.menu.find(m => m.value === this.currentTab);
+      return found ? found.label : '';
     }
   },
   mounted() {
     this.fetchOrders();
+    this.fetchWorkTypes();
   },
   methods: {
     async fetchOrders() {
@@ -131,6 +149,15 @@ export default {
         this.orders = [];
       }
     },
+    async fetchWorkTypes() {
+      try {
+        const res = await fetch('/api/work-types', { headers: { 'Accept': 'application/json' } });
+        if (!res.ok) throw new Error('Ошибка загрузки типов работ');
+        this.workTypes = await res.json();
+      } catch (e) {
+        this.workTypes = [];
+      }
+    },
     closeCreateOrderModal() {
       this.showCreateOrderModal = false;
     },
@@ -143,13 +170,32 @@ export default {
       localStorage.removeItem('user')
       this.$router.push('/login')
     },
-    openOrderModal(order) {
-      this.selectedOrder = order;
+    async openOrderModal(order) {
+      this.loadingOrder = true;
+      this.detailedOrder = null;
       this.showOrderModal = true;
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`/api/orders/${order.id}`, {
+          headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+        });
+        if (!res.ok) throw new Error('Ошибка загрузки заказа');
+        const data = await res.json();
+        this.detailedOrder = data.data || data;
+      } catch (e) {
+        this.detailedOrder = null;
+      } finally {
+        this.loadingOrder = false;
+      }
     },
     closeOrderModal() {
       this.showOrderModal = false;
-      this.selectedOrder = null;
+      this.detailedOrder = null;
+      this.loadingOrder = false;
+    },
+    onOrderUpdated(order) {
+      this.detailedOrder = order;
+      this.fetchOrders();
     },
     statusText(status) {
       switch (status) {
@@ -173,6 +219,15 @@ export default {
       // форматировать дату как "6 июля"
       const d = new Date(date);
       return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+    },
+    mapOrder(order) {
+      return {
+        ...order,
+        work_type_name: order.workType?.name || order.work_type_name || '',
+        title: order.title,
+        deadline_human: order.deadline ? this.formatDate(order.deadline) : '—',
+        budget: order.budget || '—',
+      };
     }
   }
 }
@@ -184,15 +239,23 @@ export default {
 }
 .dashboard-container {
   min-height: 80vh;
+  max-width: 1100px;
 }
 * {
   color: #fff !important;
+}
+.orders-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  align-items: stretch;
+  justify-content: center;
 }
 .modal-overlay {
   position: fixed;
   z-index: 50;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(10, 20, 40, 0.6);
+  background: rgba(10, 20, 40, 0.3); /* было 0.6, стало 0.3 для большей прозрачности */
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -211,5 +274,23 @@ export default {
 }
 .fade-enter, .fade-leave-to {
   opacity: 0;
+}
+.order-filter-box {
+  min-width: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.order-filter-select {
+  background: #19223a;
+  color: #fff;
+  border: 1px solid #22304a;
+  border-radius: 0.7rem;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  outline: none;
+}
+.orders-header-row {
+  margin-bottom: 1.5rem;
 }
 </style>

@@ -37,12 +37,6 @@ class OrderController extends Controller
             'materials.*.type' => 'required|string',
             'materials.*.description' => 'nullable|string',
             'materials.*.file_url' => 'nullable|string',
-            'type' => 'required|string',
-            'goal' => 'required|string',
-            'platform' => 'required|string',
-            'format' => 'required|string',
-            'orientation' => 'required|string',
-            'sound' => 'required|string',
         ]);
 
         $order = \App\Models\Order::create([
@@ -53,12 +47,6 @@ class OrderController extends Controller
             'budget' => $request->budget,
             'deadline' => $request->deadline,
             'status' => 'open',
-            'type' => $request->type,
-            'goal' => $request->goal,
-            'platform' => $request->platform,
-            'format' => $request->format,
-            'orientation' => $request->orientation,
-            'sound' => $request->sound,
         ]);
 
         if (!empty($data['attributes'])) {
@@ -79,7 +67,19 @@ class OrderController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $order = \App\Models\Order::with([
+            'workType',
+            'materials',
+            'attributes.value',
+            'attributes.attributeType',
+            'user'
+        ])->find($id);
+
+        if (!$order) {
+            return response()->json(['message' => 'Order not found'], 404);
+        }
+
+        return response()->json($order);
     }
 
     /**
@@ -96,5 +96,21 @@ class OrderController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    /**
+     * Исполнитель берёт заказ в работу
+     */
+    public function take(Request $request, $id)
+    {
+        $user = $request->user();
+        $order = \App\Models\Order::findOrFail($id);
+        if ($order->status !== 'open') {
+            return response()->json(['message' => 'Заказ уже в работе или закрыт'], 400);
+        }
+        $order->executor_id = $user->id;
+        $order->status = 'in_progress';
+        $order->save();
+        return response()->json($order->load(['workType', 'materials', 'attributes.value', 'attributes.attributeType', 'user', 'executor']));
     }
 }

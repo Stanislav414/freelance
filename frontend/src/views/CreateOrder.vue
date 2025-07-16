@@ -1,5 +1,5 @@
 <template>
-  <div class="flex justify-center items-center min-h-screen bg-[#071727] text-white">
+  
     <div class="w-full max-w-3xl bg-[#0D1F31] rounded-3xl p-8 shadow-lg relative">
       <button @click="closeModal" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
       <!-- Прогресс-бар шагов -->
@@ -40,64 +40,14 @@
         <div v-if="errors.description" class="text-red-400 mb-2">{{ errors.description }}</div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block mb-2 font-semibold">Тип ролика</label>
-            <select v-model="form.type" class="w-full p-3 rounded-xl bg-[#071727] text-white">
-              <option disabled value="">Выберите тип</option>
-              <option>Рекламный</option>
-              <option>Блог</option>
-              <option>Презентация</option>
-              <option>Обзор</option>
-              <option>Другое</option>
+          <div v-for="field in dynamicFields" :key="field.id">
+            <label class="block mb-2 font-semibold">{{ field.label }}</label>
+            <select v-if="field.values && field.values.length" v-model="form.attributes[field.id]" class="w-full p-3 rounded-xl bg-[#071727] text-white">
+              <option disabled value="">Выберите {{ field.label.toLowerCase() }}</option>
+              <option v-for="val in field.values" :key="val.id" :value="val.id">{{ val.label }}</option>
             </select>
-            <div v-if="errors.type" class="text-red-400">{{ errors.type }}</div>
-          </div>
-          <div>
-            <label class="block mb-2 font-semibold">Цель</label>
-            <select v-model="form.goal" class="w-full p-3 rounded-xl bg-[#071727] text-white">
-              <option disabled value="">Выберите цель</option>
-              <option>Презентация товара</option>
-              <option>Продвижение</option>
-              <option>Обучение</option>
-              <option>Развлечение</option>
-              <option>Другое</option>
-            </select>
-            <div v-if="errors.goal" class="text-red-400">{{ errors.goal }}</div>
-          </div>
-          <div>
-            <label class="block mb-2 font-semibold">Платформа</label>
-            <select v-model="form.platform" class="w-full p-3 rounded-xl bg-[#071727] text-white">
-              <option disabled value="">Выберите платформу</option>
-              <option>Instagram</option>
-              <option>TikTok</option>
-              <option>YouTube</option>
-              <option>VK</option>
-              <option>Другое</option>
-            </select>
-            <div v-if="errors.platform" class="text-red-400">{{ errors.platform }}</div>
-          </div>
-          <div>
-            <label class="block mb-2 font-semibold">Формат</label>
-            <select v-model="form.format" class="w-full p-3 rounded-xl bg-[#071727] text-white">
-              <option disabled value="">Выберите формат</option>
-              <option v-if="form.type === 'Рекламный' || form.type === 'Блог' || form.type === 'Презентация' || form.type === 'Обзор'">1080p (Full HD)</option>
-              <option v-if="form.type === 'Рекламный' || form.type === 'Блог' || form.type === 'Презентация' || form.type === 'Обзор'">4K</option>
-              <option v-if="form.type === 'Рекламный' || form.type === 'Блог' || form.type === 'Презентация' || form.type === 'Обзор'">720p</option>
-              <option v-if="form.type === 'Другое'">JPEG</option>
-              <option v-if="form.type === 'Другое'">PNG</option>
-              <option v-if="form.type === 'Другое'">WEBP</option>
-            </select>
-            <div v-if="errors.format" class="text-red-400">{{ errors.format }}</div>
-          </div>
-          <div>
-            <label class="block mb-2 font-semibold">Звук</label>
-            <select v-model="form.sound" class="w-full p-3 rounded-xl bg-[#071727] text-white">
-              <option disabled value="">Выберите звук</option>
-              <option>Фоновая музыка</option>
-              <option>Без звука</option>
-              <option>Оригинальный звук</option>
-            </select>
-            <div v-if="errors.sound" class="text-red-400">{{ errors.sound }}</div>
+            <input v-else v-model="form.attributes[field.id]" class="w-full p-3 rounded-xl bg-[#071727] text-white" :placeholder="field.label" />
+            <div v-if="errors['attr_' + field.id]" class="text-red-400">{{ errors['attr_' + field.id] }}</div>
           </div>
           <div>
             <label class="block mb-2 font-semibold">Срок выполнения</label>
@@ -138,7 +88,7 @@
         </div>
       </form>
     </div>
-  </div>
+  
 </template>
 
 <script>
@@ -149,6 +99,7 @@ export default {
       step: 1,
       workTypes: [],
       attributeTypes: [],
+      dynamicFields: [], // новые динамические поля
       wishesList: [
         { value: 'subtitles', label: 'Субтитры' },
         { value: 'sound_fx', label: 'Звуковые эффекты' },
@@ -173,7 +124,6 @@ export default {
   },
   mounted() {
     this.fetchWorkTypes();
-    this.fetchAttributeTypes();
   },
   methods: {
     closeModal() {
@@ -197,42 +147,97 @@ export default {
       this.loading = false;
     },
     async fetchWorkTypes() {
-      const res = await fetch('/api/work-types');
+      const res = await fetch('/api/work-types', {
+        headers: { 'Accept': 'application/json' }
+      });
       this.workTypes = await res.json();
     },
-    async fetchAttributeTypes() {
-      const res = await fetch('/api/order-attribute-types');
-      this.attributeTypes = await res.json();
+    async fetchDynamicFields(workTypeId) {
+      const res = await fetch(`/api/work-types/${workTypeId}/attributes`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      this.dynamicFields = await res.json();
+      // Сбросить значения атрибутов при смене типа заказа
+      this.form.attributes = {};
     },
     selectWorkType(type) {
       this.selectedWorkType = type;
       this.form.work_type_id = type.id;
-      if (type.is_custom) {
-        this.form.title = '';
-        this.form.description = '';
-      } else {
-        this.form.title = type.name;
-        this.form.description = type.description;
-      }
+      this.form.title = type.name;
+      this.form.description = type.description;
       this.errors = {};
       this.step = 2;
+      this.fetchDynamicFields(type.id);
     },
     getWorkTypeIcon(type) {
       if (!type) return '';
-      const name = type.name ? type.name.toLowerCase() : '';
-      if (name.includes('фото')) return new URL('@/assets/customer.png', import.meta.url).href;
-      if (name.includes('сторис')) return new URL('@/assets/cards2.png', import.meta.url).href;
-      if (name.includes('30')) return new URL('@/assets/cards.png', import.meta.url).href;
-      if (name.includes('1 минут')) return new URL('@/assets/performer_cards.png', import.meta.url).href;
-      if (name.includes('2 минут')) return new URL('@/assets/orders.png', import.meta.url).href;
-      if (type.is_custom) return new URL('@/assets/performer.png', import.meta.url).href;
-      return new URL('@/assets/orders.png', import.meta.url).href;
+      if (type.image) {
+        try {
+          return new URL(`../assets/${type.image}`, import.meta.url).href;
+        } catch {
+          return new URL('../assets/orders.png', import.meta.url).href;
+        }
+      }
+      return new URL('../assets/orders.png', import.meta.url).href;
     },
     addMaterial() {
       this.form.materials.push({ type: '', description: '', file_url: '' });
     },
     removeMaterial(idx) {
       this.form.materials.splice(idx, 1);
+    },
+    async submitOrder() {
+      this.errors = this.validateForm();
+      if (Object.keys(this.errors).length > 0) return;
+      this.loading = true;
+      try {
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        // Собираем массив attributes с value_id для select и value для input
+        const attributes = this.dynamicFields.map(field => {
+          const value = this.form.attributes[field.id];
+          if (field.values && field.values.length) {
+            // select: value_id должен быть выбран
+            return { attribute_type_id: field.id, value_id: value };
+          } else {
+            // input: value_id не нужен, можно добавить value (если потребуется на бэке)
+            return { attribute_type_id: field.id, value: value };
+          }
+        });
+        const materials = this.form.materials.filter(m => m.type || m.description || m.file_url);
+        const wishes = this.form.wishes.map(w => ({ type: 'wish', description: w }));
+        const body = {
+          user_id: user.id,
+          work_type_id: this.form.work_type_id,
+          title: this.form.title || (this.selectedWorkType ? this.selectedWorkType.name : 'Без названия'),
+          description: this.form.description,
+          deadline: this.form.deadline,
+          budget: this.form.budget,
+          attributes,
+          materials: [...materials, ...wishes],
+        };
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+          },
+          body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+          // Показываем ошибки валидации, если есть
+          const err = await res.json();
+          if (err.errors) this.errors = err.errors;
+          throw new Error(err.message || 'Ошибка создания заказа');
+        }
+        this.resetForm();
+        this.$emit('order-created');
+      } catch (e) {
+        alert(e.message || 'Ошибка создания заказа');
+      } finally {
+        this.loading = false;
+      }
     },
     validateForm() {
       const errors = {};
@@ -243,57 +248,19 @@ export default {
       } else {
         if (!this.form.description) errors.description = 'Введите описание заказа';
       }
-      for (const attrType of this.attributeTypes) {
-        if (!this.form.attributes[attrType.id]) {
-          errors['attr_' + attrType.id] = `Выберите ${attrType.label.toLowerCase()}`;
+      for (const field of this.dynamicFields) {
+        const value = this.form.attributes[field.id];
+        if (field.required) {
+          if (field.values && field.values.length) {
+            if (!value) errors['attr_' + field.id] = `Выберите ${field.label.toLowerCase()}`;
+          } else {
+            if (!value) errors['attr_' + field.id] = `Заполните поле ${field.label.toLowerCase()}`;
+          }
         }
       }
       if (!this.form.deadline) errors.deadline = 'Укажите срок выполнения';
       if (!this.form.budget) errors.budget = 'Укажите бюджет';
       return errors;
-    },
-    async submitOrder() {
-      this.errors = this.validateForm();
-      if (Object.keys(this.errors).length > 0) return;
-      this.loading = true;
-      try {
-        const token = localStorage.getItem('token');
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const attributes = Object.entries(this.form.attributes).map(([attribute_type_id, value_id]) => ({ attribute_type_id, value_id }));
-        const materials = this.form.materials.filter(m => m.type || m.description || m.file_url);
-        const wishes = this.form.wishes.map(w => ({ type: 'wish', description: w }));
-        const body = {
-          user_id: user.id,
-          work_type_id: this.form.work_type_id,
-          title: this.form.title || (this.selectedWorkType ? this.selectedWorkType.name : 'Без названия'),
-          description: this.form.description,
-          deadline: this.form.deadline,
-          budget: this.form.budget,
-          type: this.form.type,
-          goal: this.form.goal,
-          platform: this.form.platform,
-          format: this.form.format,
-          orientation: this.form.orientation,
-          sound: this.form.sound,
-          attributes,
-          materials: [...materials, ...wishes],
-        };
-        const res = await fetch('/api/orders', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': 'Bearer ' + token } : {})
-          },
-          body: JSON.stringify(body)
-        });
-        if (!res.ok) throw new Error('Ошибка создания заказа');
-        this.resetForm();
-        this.$emit('order-created');
-      } catch (e) {
-        alert(e.message || 'Ошибка создания заказа');
-      } finally {
-        this.loading = false;
-      }
     }
   }
 }

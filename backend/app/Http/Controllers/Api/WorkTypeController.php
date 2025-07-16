@@ -47,4 +47,20 @@ class WorkTypeController extends Controller
     {
         //
     }
+
+    public function attributes($id)
+    {
+        $workType = \App\Models\WorkType::with(['attributeTypes.values'])->findOrFail($id);
+        $attrs = $workType->attributeTypes->map(function($attr) {
+            $pivot = $attr->pivot;
+            return [
+                'id' => $attr->id,
+                'name' => $attr->name,
+                'label' => $attr->label,
+                'required' => $pivot->required,
+                'values' => $attr->values->map(fn($v) => ['id' => $v->id, 'label' => $v->label]),
+            ];
+        })->values();
+        return response()->json($attrs);
+    }
 }

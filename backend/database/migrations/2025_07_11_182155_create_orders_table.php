@@ -20,6 +20,8 @@ return new class extends Migration
             $table->decimal('budget', 10, 2)->nullable(); // Бюджет
             $table->date('deadline')->nullable(); // Срок выполнения
             $table->string('status')->default('open'); // Статус заказа
+            $table->unsignedBigInteger('executor_id')->nullable(); // Исполнитель
+            $table->foreign('executor_id')->references('id')->on('users')->onDelete('set null');
             $table->timestamps();
             
             // Add foreign key constraint separately
