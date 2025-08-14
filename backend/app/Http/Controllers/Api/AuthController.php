@@ -57,7 +57,22 @@ class AuthController extends Controller
 
     public function user(Request $request)
     {
-        return response()->json($request->user());
+        $user = $request->user();
+        
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'surname' => $user->surname,
+            'email' => $user->email,
+            'avatar' => null, // Временно отключено
+            'specialization' => $user->specialization,
+            'specializations' => $user->specializations,
+            'executor_description' => $user->executor_description,
+            'customer_description' => $user->customer_description,
+            'rating' => $user->rating,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+        ]);
     }
 
     public function logout(Request $request)

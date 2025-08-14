@@ -33,7 +33,12 @@ export default defineConfig({
     },
     server: {
       proxy: {
-        '/api': 'http://localhost:8000'
+        '/api': {
+          target: 'http://127.0.0.1:8000',
+          //target: 'https://3124dfbd3763.ngrok-free.app',
+          changeOrigin: true,
+          secure: false
+        }
       }
     }
 })

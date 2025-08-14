@@ -5,10 +5,10 @@
     <div class="hidden md:flex w-1/2 bg-[#146AF1] flex-col justify-center p-8 text-white relative">
 
       <div class="absolute top-1 left-1 p-4 flex gap-5 items-center">
-        <h1 class="text-4xl font-sans font-semibold leading-none">Название</h1>
+        <h1 class="text-4xl font-sans font-semibold leading-none">Биржа фриланса</h1>
         <div class="w-[193px] overflow-hidden">
           <p class="text-[13px] opacity-80 break-words leading-none">
-            Биржа фриланса Кемеровского государственного университета
+            
           </p>
         </div>
       </div>
@@ -83,14 +83,19 @@ export default {
       this.error = ''
       this.loading = true
       this.success = false
+      
       try {
         const res = await this.$axios.post('/login', {
           email: this.email,
           password: this.password
         })
+        
         localStorage.setItem('token', res.data.token)
         localStorage.setItem('user', JSON.stringify(res.data.user))
+        localStorage.setItem('role', res.data.user.role)
         this.success = true
+        // Показать модалку о тестовом режиме после авторизации
+        localStorage.setItem('showTestNotice', '1')
         setTimeout(() => {
           this.$router.push('/dashboard')
         }, 700)

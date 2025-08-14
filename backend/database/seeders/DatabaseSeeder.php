@@ -9,6 +9,13 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Проверяем, есть ли уже данные в базе
+        $existingWorkTypes = DB::table('work_types')->count();
+        if ($existingWorkTypes > 0) {
+            $this->command->info('Данные уже существуют в базе. Пропускаем создание типов работ и атрибутов.');
+            return;
+        }
+
         // Отключаем проверки внешних ключей
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         DB::table('order_attributes')->delete();
@@ -18,267 +25,329 @@ class DatabaseSeeder extends Seeder
         DB::table('work_types')->delete();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        // Типы заказов
-        $videoTypeId = DB::table('work_types')->insertGetId([
-            'name' => 'Видео до 30 секунд',
-            'description' => 'Короткий видеоролик до 30 секунд',
-            'average_price' => 2000,
+        // Новый тип заказа "Дизайн карточки для МП"
+        $mpCardDesignTypeId = DB::table('work_types')->insertGetId([
+            'name' => 'Дизайн карточки для МП',
+            'description' => 'Создание привлекательных и продающих карточек для маркетплейсов',
+            'average_price' => 800,
             'average_time' => '2 дня',
             'is_custom' => false,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-        $photoTypeId = DB::table('work_types')->insertGetId([
-            'name' => 'Цветокоррекция фото',
-            'description' => 'Обработка и цветокоррекция фотографий',
-            'average_price' => 500,
-            'average_time' => '1 день',
-            'is_custom' => false,
+            'image' => '',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        // Атрибуты
-        $attrs = [
-            ['name' => 'type', 'label' => 'Тип ролика'],
-            ['name' => 'goal', 'label' => 'Цель'],
-            ['name' => 'platform', 'label' => 'Платформа'],
-            ['name' => 'format', 'label' => 'Формат'],
-            ['name' => 'sound', 'label' => 'Звук'],
-            ['name' => 'orientation', 'label' => 'Ориентация'],
-            ['name' => 'color_profile', 'label' => 'Цветовой профиль'],
+        // Создаем атрибуты для дизайна карточки
+        $mpCardDesignAttrs = [
+            'marketplace' => 'Платформа (маркетплейс)',
+            'product_name' => 'Название товара',
+            'product_photo' => 'Ссылка на фото товара',
+            'card_text' => 'Текст для карточки',
+            'slides_count' => 'Количество слайдов',
+            'design_style' => 'Стиль дизайна',
         ];
-        $attrIds = [];
-        foreach ($attrs as $attr) {
-            $attrIds[$attr['name']] = DB::table('order_attribute_types')->insertGetId([
-                'name' => $attr['name'],
-                'label' => $attr['label'],
+
+        foreach ($mpCardDesignAttrs as $name => $label) {
+            $attrId = DB::table('order_attribute_types')->insertGetId([
+                'name' => $name,
+                'label' => $label,
                 'sort_order' => 0,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-        }
 
-        // Тип ролика
-        $types = ['Рекламный', 'Блог', 'Презентация', 'Обзор', 'Другое'];
-        foreach ($types as $i => $val) {
-            DB::table('order_attribute_values')->insert([
-                'attribute_type_id' => $attrIds['type'],
-                'value' => strtolower($val),
-                'label' => $val,
-                'sort_order' => $i,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-        // Цель
-        $goals = ['Презентация товара', 'Продвижение', 'Обучение', 'Развлечение', 'Другое'];
-        foreach ($goals as $i => $val) {
-            DB::table('order_attribute_values')->insert([
-                'attribute_type_id' => $attrIds['goal'],
-                'value' => strtolower($val),
-                'label' => $val,
-                'sort_order' => $i,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
+            // Добавляем значения только для выпадающих списков
+            if ($name === 'marketplace') {
+                $marketplaceValues = ['Ozon', 'Wildberries', 'Яндекс.Маркет'];
+                foreach ($marketplaceValues as $i => $val) {
+                    DB::table('order_attribute_values')->insert([
+                        'attribute_type_id' => $attrId,
+                        'value' => strtolower($val),
+                        'label' => $val,
+                        'sort_order' => $i,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
 
-        // Значения для select-атрибутов (пример)
-        $platforms = ['Instagram', 'TikTok', 'YouTube', 'VK', 'Другое'];
-        foreach ($platforms as $i => $val) {
-            DB::table('order_attribute_values')->insert([
-                'attribute_type_id' => $attrIds['platform'],
-                'value' => strtolower($val),
-                'label' => $val,
-                'sort_order' => $i,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-        $formats = ['1080p (Full HD)', '4K', '720p', 'JPEG', 'PNG', 'WEBP'];
-        foreach ($formats as $i => $val) {
-            DB::table('order_attribute_values')->insert([
-                'attribute_type_id' => $attrIds['format'],
-                'value' => strtolower($val),
-                'label' => $val,
-                'sort_order' => $i,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-        $orientations = ['Горизонтальная', 'Вертикальная', 'Квадратная'];
-        foreach ($orientations as $i => $val) {
-            DB::table('order_attribute_values')->insert([
-                'attribute_type_id' => $attrIds['orientation'],
-                'value' => strtolower($val),
-                'label' => $val,
-                'sort_order' => $i,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-        $sounds = ['Фоновая музыка', 'Без звука', 'Оригинальный звук'];
-        foreach ($sounds as $i => $val) {
-            DB::table('order_attribute_values')->insert([
-                'attribute_type_id' => $attrIds['sound'],
-                'value' => strtolower($val),
-                'label' => $val,
-                'sort_order' => $i,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-        $colorProfiles = ['sRGB', 'AdobeRGB', 'ProPhotoRGB'];
-        foreach ($colorProfiles as $i => $val) {
-            DB::table('order_attribute_values')->insert([
-                'attribute_type_id' => $attrIds['color_profile'],
-                'value' => strtolower($val),
-                'label' => $val,
-                'sort_order' => $i,
+            // Связываем атрибут с типом заказа
+            DB::table('work_type_attribute_type')->insert([
+                'work_type_id' => $mpCardDesignTypeId,
+                'attribute_type_id' => $attrId,
+                'required' => true,
+                'sort_order' => array_search($name, array_keys($mpCardDesignAttrs)),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
         }
 
-        // Связи work_type <-> attribute_type (и обязательность)
-        // Для "Видео до 30 секунд"
-        $videoAttrs = ['type', 'goal', 'platform', 'format', 'sound', 'orientation'];
-        foreach ($videoAttrs as $i => $name) {
+        // Новый тип заказа "Дизайн визитки"
+        $businessCardTypeId = DB::table('work_types')->insertGetId([
+            'name' => 'Дизайн визитки',
+            'description' => 'Создание профессиональных визиток для бизнеса',
+            'average_price' => 1500,
+            'average_time' => '3 дня',
+            'is_custom' => false,
+            'image' => '',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Создаем атрибуты для дизайна визитки
+        $businessCardAttrs = [
+            'card_purpose' => 'Какова основная цель визитки?',
+            'card_recipients' => 'Кто будет получать визитку?',
+            'recipient_lifestyle' => 'Какой образ жизни у получателя визитки?',
+            'card_text' => 'Какой текст нужно разместить на визитке?',
+            'contact_info' => 'Какие контактные данные включить?',
+            'brandbook' => 'Прикрепите брендбук (если есть)',
+            'company_name' => 'Название компании',
+            'company_colors' => 'Цвета компании',
+            'company_fonts' => 'Шрифты компании',
+            'company_logo' => 'Загрузите логотип компании',
+            'brand_elements' => 'Загрузите фирменные элементы',
+            'qr_code_link' => 'Ссылка для QR-кода',
+            'qr_code_description' => 'Описание QR-кода',
+            'card_size' => 'Размер визитки',
+            'design_direction' => 'Общее направление дизайна',
+            'background_color' => 'Цвет фона визитки',
+            'card_sides' => 'Сколько сторон у визитки?',
+        ];
+
+        foreach ($businessCardAttrs as $name => $label) {
+            $attrId = DB::table('order_attribute_types')->insertGetId([
+                'name' => $name,
+                'label' => $label,
+                'sort_order' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Добавляем значения только для выпадающих списков
+            if ($name === 'card_purpose') {
+                $cardPurposeValues = ['Бизнес', 'Личная', 'Событие', 'Промо'];
+                foreach ($cardPurposeValues as $i => $val) {
+                    DB::table('order_attribute_values')->insert([
+                        'attribute_type_id' => $attrId,
+                        'value' => strtolower($val),
+                        'label' => $val,
+                        'sort_order' => $i,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            if ($name === 'card_recipients') {
+                $cardRecipientsValues = ['Клиенты', 'Партнеры', 'Коллеги', 'Друзья', 'Семья'];
+                foreach ($cardRecipientsValues as $i => $val) {
+                    DB::table('order_attribute_values')->insert([
+                        'attribute_type_id' => $attrId,
+                        'value' => strtolower($val),
+                        'label' => $val,
+                        'sort_order' => $i,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            if ($name === 'recipient_lifestyle') {
+                $lifestyleValues = ['Деловой', 'Творческий', 'Спортивный', 'Классический', 'Современный'];
+                foreach ($lifestyleValues as $i => $val) {
+                    DB::table('order_attribute_values')->insert([
+                        'attribute_type_id' => $attrId,
+                        'value' => strtolower($val),
+                        'label' => $val,
+                        'sort_order' => $i,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            if ($name === 'card_size') {
+                $cardSizeValues = ['Стандарт (90x50 мм)', 'Евро (85x55 мм)', 'Американский (88.9x50.8 мм)', 'Квадрат (50x50 мм)'];
+                foreach ($cardSizeValues as $i => $val) {
+                    DB::table('order_attribute_values')->insert([
+                        'attribute_type_id' => $attrId,
+                        'value' => strtolower($val),
+                        'label' => $val,
+                        'sort_order' => $i,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            if ($name === 'design_direction') {
+                $designDirectionValues = ['Минимализм', 'Классика', 'Современный', 'Креативный', 'Элегантный'];
+                foreach ($designDirectionValues as $i => $val) {
+                    DB::table('order_attribute_values')->insert([
+                        'attribute_type_id' => $attrId,
+                        'value' => strtolower($val),
+                        'label' => $val,
+                        'sort_order' => $i,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            if ($name === 'card_sides') {
+                $cardSidesValues = ['Односторонняя', 'Двусторонняя'];
+                foreach ($cardSidesValues as $i => $val) {
+                    DB::table('order_attribute_values')->insert([
+                        'attribute_type_id' => $attrId,
+                        'value' => strtolower($val),
+                        'label' => $val,
+                        'sort_order' => $i,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            // Связываем атрибут с типом заказа
+            DB::table('work_type_attribute_type')->insert([
+                'work_type_id' => $businessCardTypeId,
+                'attribute_type_id' => $attrId,
+                'required' => true,
+                'sort_order' => array_search($name, array_keys($businessCardAttrs)),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+        
+        // Новый тип заказа "Видео"
+        $videoTypeId = DB::table('work_types')->insertGetId([
+            'name' => 'Видео',
+            'description' => 'Создание и монтаж видеороликов под разные задачи',
+            'average_price' => 3000,
+            'average_time' => '3 дня',
+            'is_custom' => false,
+            'image' => '',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Атрибуты для типа "Видео"
+        $videoAttrs = [
+            'duration' => 'Какое количество секунд должно быть в итоговом видео?',
+            'format' => 'Какого формата должно быть видео?',
+            'direction' => 'Какой направленности должно быть видео?',
+            'add_subtitles' => 'Добавить субтитры?'
+        ];
+
+        foreach ($videoAttrs as $name => $label) {
+            $attrId = DB::table('order_attribute_types')->insertGetId([
+                'name' => 'video_' . $name,
+                'label' => $label,
+                'sort_order' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Значения для выпадающих списков
+            if ($name === 'duration') {
+                $values = ['до 15 секунд', '16-30 секунд', '31-60 секунд', '61-100 секунд', '101-150 секунд'];
+                foreach ($values as $i => $val) {
+                    DB::table('order_attribute_values')->insert([
+                        'attribute_type_id' => $attrId,
+                        'value' => strtolower($val),
+                        'label' => $val,
+                        'sort_order' => $i,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            if ($name === 'format') {
+                $values = ['9:16 (tik tok)', '1:1', '16:9 (Youtube)', '4:3 (горизонтальный)', '3:4 (вертикальный)', '5.8"', '2:1', '2.35:1', '1.85:1', 'Свой вариант'];
+                foreach ($values as $i => $val) {
+                    DB::table('order_attribute_values')->insert([
+                        'attribute_type_id' => $attrId,
+                        'value' => strtolower($val),
+                        'label' => $val,
+                        'sort_order' => $i,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            if ($name === 'direction') {
+                $values = [
+                    'Анимационное видео (2D, 3D, моушн-графика)',
+                    'Видео визитка',
+                    'Видео с ASRM звуками',
+                    'Видеоподкаст',
+                    'Влог, видео из путешествия',
+                    'Видео инструкция',
+                    'Информационное видео',
+                    'Клип',
+                    'Видео-нарезка',
+                    'Мультфильм',
+                    'Обзорное видео недвижимости / пространства, услуги, спортивных соревнований',
+                    'Отзыв',
+                    'Отчетное видео',
+                    'Приветственное видео',
+                    'Развлекательного характера',
+                    'Рекламное видео',
+                    'Репортаж',
+                    'Рецепты',
+                    'Распаковка товара',
+                    'Самопрезентация',
+                    'Свадебное видео',
+                    'Тизер / Трейлер',
+                    'Художественное видео (короткометражка), свой вариант'
+                ];
+                foreach ($values as $i => $val) {
+                    DB::table('order_attribute_values')->insert([
+                        'attribute_type_id' => $attrId,
+                        'value' => strtolower($val),
+                        'label' => $val,
+                        'sort_order' => $i,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            if ($name === 'add_subtitles') {
+                $values = ['да', 'нет'];
+                foreach ($values as $i => $val) {
+                    DB::table('order_attribute_values')->insert([
+                        'attribute_type_id' => $attrId,
+                        'value' => strtolower($val),
+                        'label' => $val,
+                        'sort_order' => $i,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            // Связываем атрибут с типом заказа "Видео"
             DB::table('work_type_attribute_type')->insert([
                 'work_type_id' => $videoTypeId,
-                'attribute_type_id' => $attrIds[$name],
+                'attribute_type_id' => $attrId,
                 'required' => true,
-                'sort_order' => $i,
+                'sort_order' => array_search($name, array_keys($videoAttrs)),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
         }
-        // Для "Цветокоррекция фото"
-        $photoAttrs = ['color_profile'];
-        foreach ($photoAttrs as $i => $name) {
-            DB::table('work_type_attribute_type')->insert([
-                'work_type_id' => $photoTypeId,
-                'attribute_type_id' => $attrIds[$name],
-                'required' => true,
-                'sort_order' => $i,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        // Добавляем новый атрибут 'Анимация', если его нет
-        if (!isset($attrIds['animation'])) {
-            $attrIds['animation'] = DB::table('order_attribute_types')->insertGetId([
-                'name' => 'animation',
-                'label' => 'Анимация',
-                'sort_order' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-        // Значения для 'Анимация'
-        $animations = ['Нет', 'Простая', 'Сложная'];
-        foreach ($animations as $i => $val) {
-            DB::table('order_attribute_values')->insert([
-                'attribute_type_id' => $attrIds['animation'],
-                'value' => strtolower($val),
-                'label' => $val,
-                'sort_order' => $i,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-        // Новый тип заказа 'Оформление сторис'
-        $storiesTypeId = DB::table('work_types')->insertGetId([
-            'name' => 'Оформление сторис',
-            'description' => 'Дизайн и оформление сторис для соцсетей',
-            'average_price' => 1000,
-            'average_time' => '1 день',
-            'is_custom' => false,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-        // Связи для сторис
-        $storiesAttrs = ['platform', 'format', 'orientation', 'color_profile', 'animation'];
-        foreach ($storiesAttrs as $i => $name) {
-            DB::table('work_type_attribute_type')->insert([
-                'work_type_id' => $storiesTypeId,
-                'attribute_type_id' => $attrIds[$name],
-                'required' => true,
-                'sort_order' => $i,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        // --- ДОБАВЛЕНИЕ "Инфографика для МП" без удаления прошлых типов ---
-        // Проверяем, есть ли уже такой тип
-        $infographicType = DB::table('work_types')->where('name', 'Инфографика для МП')->first();
-        if (!$infographicType) {
-            $infographicTypeId = DB::table('work_types')->insertGetId([
-                'name' => 'Инфографика для МП',
-                'description' => 'Понятная и продающая инфографика для карточек товаров',
-                'average_price' => 400,
-                'average_time' => '3 часа',
-                'is_custom' => false,
-                'image' => 'infographic.png',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        } else {
-            $infographicTypeId = $infographicType->id;
-        }
-        // --- Атрибут marketplace ---
-        $mpPlatforms = ['Ozon', 'Wildberries', 'Яндекс.Маркет', 'AliExpress', 'Другое'];
-        $marketplaceAttr = DB::table('order_attribute_types')->where('name', 'marketplace')->first();
-        if (!$marketplaceAttr) {
-            $marketplaceAttrId = DB::table('order_attribute_types')->insertGetId([
-                'name' => 'marketplace',
-                'label' => 'Платформа (маркетплейс)',
-                'sort_order' => 0,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            foreach ($mpPlatforms as $i => $val) {
-                DB::table('order_attribute_values')->insert([
-                    'attribute_type_id' => $marketplaceAttrId,
-                    'value' => strtolower($val),
-                    'label' => $val,
-                    'sort_order' => $i,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-        } else {
-            $marketplaceAttrId = $marketplaceAttr->id;
-        }
-        // --- Связи work_type <-> attribute_type для инфографики ---
-        $attrIdsForInfographic = [
-            $marketplaceAttrId
-        ];
-        // format, orientation, color_profile, animation могут быть созданы выше, ищем их id
-        $attrNames = ['format', 'orientation', 'color_profile', 'animation'];
-        foreach ($attrNames as $name) {
-            $attr = DB::table('order_attribute_types')->where('name', $name)->first();
-            if ($attr) $attrIdsForInfographic[] = $attr->id;
-        }
-        // Добавляем связи, если их нет
-        foreach ($attrIdsForInfographic as $i => $attrId) {
-            $exists = DB::table('work_type_attribute_type')
-                ->where('work_type_id', $infographicTypeId)
-                ->where('attribute_type_id', $attrId)
-                ->first();
-            if (!$exists) {
-                DB::table('work_type_attribute_type')->insert([
-                    'work_type_id' => $infographicTypeId,
-                    'attribute_type_id' => $attrId,
-                    'required' => true,
-                    'sort_order' => $i,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-        }
+        
+        // Запускаем сидер для тарифов
+        $this->call(TariffSeeder::class);
+        
+        // Запускаем сидер для заказов
+        $this->call(OrderSeeder::class);
+        
+        // Запускаем сидер для чатов
+        $this->call(ChatSeeder::class);
     }
 }

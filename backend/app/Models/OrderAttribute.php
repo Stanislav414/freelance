@@ -7,8 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class OrderAttribute extends Model
 {
     protected $fillable = [
-        'order_id', 'attribute_type_id', 'value_id'
+        'order_id', 'attribute_type_id', 'value_id', 'value'
     ];
+
+    // Добавляем вычисляемое поле для текстового значения
+    protected $appends = ['value_text'];
+
+    public function getValueTextAttribute(): ?string
+    {
+        return $this->attributes['value'] ?? null;
+    }
 
     public function order()
     {

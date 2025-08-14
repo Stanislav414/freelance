@@ -5,10 +5,10 @@
       <div class="hidden md:flex w-1/2 bg-[#146AF1] flex-col justify-center p-8 text-white relative">
   
         <div class="absolute top-1 left-1 p-4 flex gap-5 items-center">
-          <h1 class="text-4xl font-sans font-semibold leading-none">Название</h1>
+          <h1 class="text-4xl font-sans font-semibold leading-none">Биржа фриланса</h1>
           <div class="w-[193px] overflow-hidden">
             <p class="text-[13px] opacity-80 break-words leading-none">
-              Биржа фриланса Кемеровского государственного университета
+             
             </p>
           </div>
         </div>

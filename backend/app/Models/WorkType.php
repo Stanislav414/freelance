@@ -10,7 +10,7 @@ class WorkType extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'description', 'average_price', 'average_time', 'is_custom'
+        'name', 'description', 'average_price', 'average_time', 'is_custom', 'image'
     ];
 
     public function orders()

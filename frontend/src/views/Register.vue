@@ -152,6 +152,8 @@ export default {
         })
         localStorage.setItem('token', res.data.token)
         localStorage.setItem('user', JSON.stringify(res.data.user))
+        // Показать модалку о тестовом режиме после регистрации
+        localStorage.setItem('showTestNotice', '1')
         this.$router.push('/dashboard')
       } catch (e) {
         // Проверяем, есть ли ошибка email

@@ -10,7 +10,7 @@ export default {
 
 <style>
 body {
-  font-family: Inter, sans-serif;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   margin: 0;
 }
 </style>

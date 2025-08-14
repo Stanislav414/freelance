@@ -4,6 +4,13 @@ import Register from './views/Register.vue'
 import Dashboard from './views/Dashboard.vue'
 import Recover from './views/Recover.vue'
 import CreateOrder from './views/CreateOrder.vue'
+import CustomerProfile from './views/CustomerProfile.vue'
+import CustomerProfileEdit from './views/CustomerProfileEdit.vue'
+import ExecutorProfile from './views/ExecutorProfile.vue'
+import Portfolio from './views/Portfolio.vue'
+import Profile from './views/Profile.vue'
+import ExecutorProfileEdit from './views/ExecutorProfileEdit.vue'
+import Settings from './views/Settings.vue'
 
 const routes = [
     { path: '/login', component: Login, meta: { guest: true } },
@@ -12,6 +19,23 @@ const routes = [
     { path: '/recover', component: Recover, meta: { guest: true } },
     { path: '/orders/create', component: CreateOrder, meta: { requiresAuth: true } },
     { path: '/', component: () => import('./views/Start.vue') },
+    { path: '/profile/customer', component: CustomerProfile, meta: { requiresAuth: true } },
+    { path: '/profile/executor/:id', component: ExecutorProfile, meta: { requiresAuth: true } },
+    { path: '/profile/executor/:id/edit', component: ExecutorProfileEdit, meta: { requiresAuth: true } },
+    { path: '/profile/customer/:id', component: CustomerProfile, meta: { requiresAuth: true } },
+    { path: '/profile/customer/:id/edit', component: CustomerProfileEdit, meta: { requiresAuth: true } },
+    { path: '/portfolio/:id', component: Portfolio },
+    { path: '/profile', component: Profile, meta: { requiresAuth: true } },
+    { path: '/settings', component: Settings, meta: { requiresAuth: true } },
+    {
+        path: '/profile-old',
+        redirect: () => {
+            const role = localStorage.getItem('role')
+            if (role === 'customer') return '/profile/customer'
+            if (role === 'executor') return '/profile/executor'
+            return '/dashboard'
+        }
+    },
     { path: '/:pathMatch(.*)*', redirect: '/login' },
 ]
 

@@ -1,5 +1,727 @@
 @import "tailwindcss";
+@import "@fontsource/poppins/300.css";
+@import "@fontsource/poppins/400.css";
+@import "@fontsource/poppins/500.css";
+@import "@fontsource/poppins/600.css";
+@import "@fontsource/poppins/700.css";
+
+/* Глобальные переменные цветов кнопок */
+:root {
+  --color-green: #28B463;
+  --color-green-hover: #239954;
+  --color-red: #D7263D;
+  --color-red-hover: #C11E36;
+  --color-blue: #146AF1;
+  --color-blue-hover: #1055D6;
+  --color-orange: #E5662F;
+  --color-orange-hover: #D14D1E;
+}
+
+/* Переопределение цветов Tailwind для кнопок */
+.bg-green-600 {
+  background-color: var(--color-green) !important;
+}
+.bg-green-600:hover:not(:disabled) {
+  background-color: var(--color-green-hover) !important;
+}
+.hover\:bg-green-700:hover:not(:disabled) {
+  background-color: var(--color-green-hover) !important;
+}
+
+.bg-red-600, .bg-red-500 {
+  background-color: var(--color-red) !important;
+}
+.bg-red-600:hover:not(:disabled), .bg-red-500:hover:not(:disabled) {
+  background-color: var(--color-red-hover) !important;
+}
+.hover\:bg-red-700:hover:not(:disabled), .hover\:bg-red-600:hover:not(:disabled) {
+  background-color: var(--color-red-hover) !important;
+}
+
+.bg-blue-600 {
+  background-color: var(--color-blue) !important;
+}
+.bg-blue-600:hover:not(:disabled) {
+  background-color: var(--color-blue-hover) !important;
+}
+.hover\:bg-blue-700:hover:not(:disabled) {
+  background-color: var(--color-blue-hover) !important;
+}
+
+.bg-orange-600 {
+  background-color: var(--color-orange) !important;
+}
+.bg-orange-600:hover:not(:disabled) {
+  background-color: var(--color-orange-hover) !important;
+}
+.hover\:bg-orange-700:hover:not(:disabled) {
+  background-color: var(--color-orange-hover) !important;
+}
 
 body {
     @apply bg-gray-900;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+* {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+html {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Адаптивные стили для разных разрешений */
+
+/* Мобильные устройства (до 768px) */
+@media (max-width: 768px) {
+    .dashboard-container {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 0 1rem;
+    }
+    
+    .dashboard-container aside {
+        width: 100%;
+        order: 2;
+    }
+    
+    .dashboard-container main {
+        order: 1;
+    }
+    
+    .menu-block {
+        padding: 0.5rem;
+    }
+    
+    .role-switcher-oval {
+        margin-bottom: 0.5rem;
+    }
+    
+    .orders-header-row {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .order-filter-box {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .filter-btn {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .orders-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .order-card {
+        padding: 1rem;
+    }
+    
+    .order-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .order-btn {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 0.875rem;
+    }
+}
+
+/* Планшеты (768px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .dashboard-container {
+        gap: 1.5rem;
+        padding: 0 1.5rem;
+    }
+    
+    .dashboard-container aside {
+        width: 280px;
+    }
+    
+    .orders-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .order-filter-box {
+        gap: 0.75rem;
+    }
+}
+
+/* Большие экраны (1025px - 1440px) */
+@media (min-width: 1025px) and (max-width: 1440px) {
+    .dashboard-container {
+        max-width: 1200px;
+        gap: 2rem;
+    }
+    
+    .orders-grid {
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+    }
+}
+
+/* Очень большие экраны (1441px+) */
+@media (min-width: 1441px) {
+    .dashboard-container {
+        max-width: 1600px;
+        gap: 3rem;
+    }
+    
+    .orders-grid {
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2.5rem;
+    }
+}
+
+/* Адаптивные стили для модальных окон */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 1rem;
+        max-height: 90vh;
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+    
+    .form-step-container {
+        max-height: 60vh;
+    }
+    
+    .modal-header {
+        padding: 1rem 1.5rem;
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .modal-title {
+        font-size: 1.25rem;
+    }
+    
+    .executors-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .executor-card {
+        padding: 1rem;
+    }
+    
+    .order-details {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .form-actions {
+        padding: 0.75rem 0;
+    }
+    
+    .form-actions .flex {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .form-actions button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-content {
+        width: 100%;
+        margin: 0.5rem;
+        max-height: 85vh;
+        padding: 1rem;
+    }
+    
+    .form-step-container {
+        max-height: 50vh;
+    }
+    
+    .step-indicator {
+        width: 2rem;
+        height: 2rem;
+        font-size: 1rem;
+    }
+    
+    .form-actions {
+        padding: 0.5rem 0;
+    }
+}
+
+/* Адаптивные стили для форм */
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .form-input {
+        padding: 0.75rem;
+        font-size: 1rem;
+    }
+    
+    .form-button {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1rem;
+    }
+    
+    .step-indicator {
+        width: 2rem;
+        height: 2rem;
+        font-size: 1rem;
+    }
+}
+
+/* Адаптивные стили для карточек заказов */
+@media (max-width: 480px) {
+    .order-card {
+        padding: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .order-title {
+        font-size: 1rem;
+    }
+    
+    .order-description {
+        font-size: 0.875rem;
+    }
+    
+    .order-meta {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .order-budget,
+    .order-deadline {
+        font-size: 0.75rem;
+    }
+}
+
+/* Адаптивные стили для навигации */
+@media (max-width: 768px) {
+    .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #0D1F31;
+        border-top: 1px solid #22304a;
+        z-index: 1000;
+    }
+    
+    .bottom-nav-item {
+        flex: 1;
+        padding: 0.75rem;
+        text-align: center;
+        font-size: 0.875rem;
+    }
+    
+    .dashboard-container {
+        padding-bottom: 4rem;
+    }
+}
+
+/* Адаптивные стили для поиска */
+@media (max-width: 768px) {
+    .search-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .search-input {
+        width: 100%;
+    }
+    
+    .search-btn {
+        width: 100%;
+        padding: 0.75rem;
+    }
+}
+
+/* Адаптивные стили для фильтров */
+@media (max-width: 640px) {
+    .filter-container {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .dropdown-list {
+        position: static;
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+    
+    .dropdown-item {
+        padding: 0.75rem;
+        border-bottom: 1px solid #22304a;
+    }
+}
+
+/* Адаптивные стили для кнопок */
+@media (max-width: 768px) {
+    .btn-primary {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1rem;
+        border-radius: 0.75rem;
+    }
+    
+    .btn-secondary {
+        width: 100%;
+        padding: 0.875rem;
+        font-size: 0.875rem;
+        border-radius: 0.75rem;
+    }
+}
+
+/* Адаптивные стили для текста */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 1.5rem;
+    }
+    
+    h2 {
+        font-size: 1.25rem;
+    }
+    
+    h3 {
+        font-size: 1.125rem;
+    }
+    
+    p {
+        font-size: 0.875rem;
+    }
+}
+
+/* Адаптивные стили для иконок */
+@media (max-width: 768px) {
+    .icon-small {
+        width: 1rem;
+        height: 1rem;
+    }
+    
+    .icon-medium {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+    
+    .icon-large {
+        width: 2rem;
+        height: 2rem;
+    }
+}
+
+/* Адаптивные стили для отступов */
+@media (max-width: 768px) {
+    .container-padding {
+        padding: 1rem;
+    }
+    
+    .section-spacing {
+        margin-bottom: 1.5rem;
+    }
+    
+    .card-spacing {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Адаптивные стили для сеток */
+@media (max-width: 640px) {
+    .grid-1 {
+        grid-template-columns: 1fr;
+    }
+    
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+    
+    .grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+    .grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1025px) {
+    .grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Адаптивные стили для скролла */
+@media (max-width: 768px) {
+    .scroll-container {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+    }
+    
+    .scroll-container::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    .scroll-container::-webkit-scrollbar-track {
+        background: #22304a;
+    }
+    
+    .scroll-container::-webkit-scrollbar-thumb {
+        background: #4a5568;
+        border-radius: 2px;
+    }
+}
+
+/* Адаптивные стили для анимаций */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Адаптивные стили для темной темы */
+@media (prefers-color-scheme: dark) {
+    .auto-dark {
+        background-color: #0D1F31;
+        color: #ffffff;
+    }
+}
+
+/* Адаптивные стили для высокого DPI */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .high-dpi {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Улучшенные мобильные стили для всего приложения */
+@media (max-width: 768px) {
+  /* Улучшенная типографика для мобильных */
+  body {
+    font-size: 16px; /* Предотвращает зум на iOS */
+    line-height: 1.5;
+  }
+  
+  /* Улучшенные отступы для мобильных */
+  .container-padding {
+    padding: 1rem;
+  }
+  
+  /* Улучшенные карточки */
+  .card, .block, .section {
+    border-radius: 16px;
+    margin-bottom: 1rem;
+  }
+  
+  /* Улучшенные кнопки */
+  button, .btn {
+    min-height: 44px; /* Минимальная высота для touch */
+    font-size: 16px;
+    border-radius: 12px;
+  }
+  
+  /* Улучшенные формы */
+  input, textarea, select {
+    font-size: 16px; /* Предотвращает зум на iOS */
+    padding: 12px 16px;
+    border-radius: 12px;
+    min-height: 44px;
+  }
+  
+  /* Улучшенные модальные окна */
+  .modal-content, .modal-window {
+    border-radius: 20px;
+    margin: 1rem;
+  }
+  
+  /* Улучшенная навигация */
+  .nav-item, .menu-item {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+  
+  /* Улучшенные списки */
+  .list-item {
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+  
+  /* Улучшенные иконки */
+  .icon {
+    min-width: 24px;
+    min-height: 24px;
+  }
+  
+  /* Улучшенные отступы для контента */
+  .content-padding {
+    padding: 1rem;
+  }
+  
+  /* Улучшенные заголовки */
+  h1 {
+    font-size: 1.75rem;
+    line-height: 1.2;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.3;
+  }
+  
+  h3 {
+    font-size: 1.25rem;
+    line-height: 1.4;
+  }
+  
+  /* Улучшенные сетки */
+  .grid {
+    gap: 1rem;
+  }
+  
+  /* Улучшенные flex контейнеры */
+  .flex {
+    gap: 0.75rem;
+  }
+  
+  /* Улучшенные скроллбары */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #22304a;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #4a5568;
+    border-radius: 3px;
+  }
+  
+  /* Улучшенные анимации */
+  * {
+    transition: all 0.2s ease;
+  }
+  
+  /* Улучшенные hover эффекты для touch устройств */
+  @media (hover: none) {
+    .hover\:bg-gray-700:hover,
+    .hover\:bg-blue-600:hover,
+    .hover\:bg-green-600:hover {
+      background-color: inherit;
+    }
+  }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 480px) {
+  .container-padding {
+    padding: 0.75rem;
+  }
+  
+  .content-padding {
+    padding: 0.75rem;
+  }
+  
+  /* Еще более компактные отступы */
+  .card, .block, .section {
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  /* Компактные кнопки */
+  button, .btn {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  
+  /* Компактные формы */
+  input, textarea, select {
+    padding: 10px 12px;
+    font-size: 16px;
+  }
+  
+  /* Компактные заголовки */
+  h1 {
+    font-size: 1.5rem;
+  }
+  
+  h2 {
+    font-size: 1.25rem;
+  }
+  
+  h3 {
+    font-size: 1.125rem;
+  }
+}
+
+/* Ландшафтная ориентация на мобильных */
+@media (max-width: 768px) and (orientation: landscape) {
+  .dashboard-container {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .modal-content {
+    max-height: 80vh;
+  }
+  
+  .form-section {
+    max-height: 50vh;
+  }
+}
+
+/* Улучшенные стили для PWA */
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Улучшенные стили для темной темы */
+@media (prefers-color-scheme: dark) {
+  .auto-dark {
+    background-color: #0D1F31;
+    color: #ffffff;
+  }
+}
+
+/* Улучшенные стили для уменьшенного движения */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

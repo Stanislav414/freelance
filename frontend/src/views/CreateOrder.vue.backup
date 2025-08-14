@@ -1,0 +1,2077 @@
+<template>
+  
+                                       <div class="w-full max-w-[98vw] bg-[#0D1F31] rounded-3xl p-8 shadow-lg relative create-order-modal overflow-hidden">
+      <button @click="closeModal" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
+      <!-- Прогресс-бар шагов -->
+      <div class="flex items-center justify-center gap-4 mb-8">
+        <div :class="['step-indicator', step === 1 ? 'active' : '']">1</div>
+        <div class="h-1 w-12 bg-[#22304a] rounded"></div>
+        <div :class="['step-indicator', step === 2 ? 'active' : '']">2</div>
+        <div class="h-1 w-12 bg-[#22304a] rounded"></div>
+        <div :class="['step-indicator', step === 3 ? 'active' : '']">3</div>
+      </div>
+      <div class="flex items-center justify-center gap-8 mb-6 text-sm">
+        <span :class="step === 1 ? 'font-bold text-white' : 'text-gray-400'">Выбор типа работы</span>
+        <span :class="step === 2 ? 'font-bold text-white' : 'text-gray-400'">Характеристики заказа</span>
+        <span :class="step === 3 ? 'font-bold text-white' : 'text-gray-400'">Выбор исполнителя</span>
+      </div>
+      <div v-if="step === 1">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 grid-2">
+          <div v-for="type in workTypes" :key="type.id" @click="selectWorkType(type)"
+               :class="['cursor-pointer flex bg-[#19223a] rounded-2xl overflow-hidden transition-shadow border-2',
+                 selectedWorkType && selectedWorkType.id === type.id ? 'border-blue-500 ring-2 ring-blue-400' : 'border-transparent hover:border-blue-400']">
+            <div class="flex items-center justify-center w-32 h-32 bg-[#2a3950]">
+              <img :src="getWorkTypeIcon(type)" class="w-16 h-16 object-contain" alt="icon" />
+            </div>
+            <div class="flex-1 flex flex-col justify-between p-4">
+              <div>
+                <div class="font-bold text-lg mb-1">{{ type.name }}</div>
+                <div class="text-sm mb-2">{{ type.description }}</div>
+              </div>
+              <div class="flex gap-4 mt-2">
+                <div class="text-xs bg-[#22304a] rounded-xl px-3 py-1">{{ type.average_time || '—' }}<br>сред. время</div>
+                <div class="text-xs bg-[#22304a] rounded-xl px-3 py-1">{{ type.average_price || '—' }}₽<br>сред. цена</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-if="errors.work_type_id" class="text-red-400 mt-2">{{ errors.work_type_id }}</div>
+      </div>
+               <!-- Шаг 2: Характеристики заказа -->
+       <div v-if="step === 2" class="form-step-container">
+         <div class="form-content">
+           
+           <!-- Секция "О заказе" -->
+           <div class="order-section mb-8">
+             <h3 class="section-title mb-4">О заказе</h3>
+             <div class="order-card">
+               <div class="order-header">
+                 <div class="order-icon">
+                   <img :src="getWorkTypeIcon(selectedWorkType)" class="w-8 h-8" alt="icon" />
+                 </div>
+                 <div class="order-info">
+                   <h4 class="order-title">{{ selectedWorkType?.name }}</h4>
+                   <p class="order-description">{{ selectedWorkType?.description }}</p>
+                 </div>
+               </div>
+               <div class="order-meta">
+                 <span class="meta-item">{{ selectedWorkType?.average_time || '2 дня' }}</span>
+                 <span class="meta-item">{{ selectedWorkType?.average_price || '800' }}₽</span>
+               </div>
+             </div>
+             
+             <div class="description-section mt-6">
+               <label class="block mb-3 font-semibold text-base text-white">Описание задачи</label>
+               <textarea 
+                 v-model="form.description" 
+                 rows="6" 
+                 class="w-full p-4 rounded-2xl bg-[#071727] text-white border-2 border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors resize-none text-lg" 
+                 placeholder="Подробно опишите вашу задачу, детали, пожелания, требования к результату..."
+               ></textarea>
+               <div v-if="errors.description" class="text-red-400 mt-2 text-sm">{{ errors.description }}</div>
+             </div>
+           </div>
+
+           <!-- Секция "Характеристики заказа" -->
+           <div class="order-section mb-8">
+             <h3 class="section-title mb-6">Характеристики заказа</h3>
+             <div class="characteristics-grid-wide">
+               <div v-for="field in dynamicFields.slice(0, 3)" :key="field.id" class="characteristic-item-wide">
+                 <label class="block mb-3 font-semibold text-base text-white">{{ field.label }}</label>
+                 <select 
+                   v-if="field.values && field.values.length" 
+                   v-model="form.attributes[field.id]" 
+                   class="w-full p-4 rounded-2xl bg-[#071727] text-white border-2 border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors text-lg"
+                 >
+                   <option disabled value="">Выберите {{ field.label.toLowerCase() }}</option>
+                   <option v-for="val in field.values" :key="val.id" :value="val.id">{{ val.label }}</option>
+                 </select>
+                 <input 
+                   v-else 
+                   v-model="form.attributes[field.id]" 
+                   class="w-full p-4 rounded-2xl bg-[#071727] text-white border-2 border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors text-lg" 
+                   :placeholder="field.label" 
+                 />
+                 <div v-if="errors['attr_' + field.id]" class="text-red-400 mt-2 text-sm">{{ errors['attr_' + field.id] }}</div>
+               </div>
+             </div>
+           </div>
+
+           <!-- Секция "Технические требования" -->
+           <div class="order-section mb-8">
+             <h3 class="section-title mb-6">Технические требования</h3>
+             <div class="characteristics-grid-wide">
+               <div v-for="field in dynamicFields.slice(3, 6)" :key="field.id" class="characteristic-item-wide">
+                 <label class="block mb-3 font-semibold text-base text-white">{{ field.label }}</label>
+                 <select 
+                   v-if="field.values && field.values.length" 
+                   v-model="form.attributes[field.id]" 
+                   class="w-full p-4 rounded-2xl bg-[#071727] text-white border-2 border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors text-lg"
+                 >
+                   <option disabled value="">Выберите {{ field.label.toLowerCase() }}</option>
+                   <option v-for="val in field.values" :key="val.id" :value="val.id">{{ val.label }}</option>
+                 </select>
+                 <input 
+                   v-else 
+                   v-model="form.attributes[field.id]" 
+                   class="w-full p-4 rounded-2xl bg-[#071727] text-white border-2 border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors text-lg" 
+                   :placeholder="field.label" 
+                 />
+                 <div v-if="errors['attr_' + field.id]" class="text-red-400 mt-2 text-sm">{{ errors['attr_' + field.id] }}</div>
+               </div>
+             </div>
+           </div>
+
+           <!-- Секция "Количество слайдов" (только для "Дизайн карточки для МП") -->
+           <div v-if="selectedWorkType?.name === 'Дизайн карточки для МП'" class="order-section mb-8">
+             <h3 class="section-title mb-4">Количество слайдов</h3>
+             <div class="characteristics-grid-wide">
+               <div class="characteristic-item-wide">
+                 <label class="block mb-3 font-semibold text-base text-white">Количество слайдов</label>
+                 <input 
+                   v-model="form.slidesQuantity" 
+                   type="number" 
+                   min="1" 
+                   max="50"
+                   class="w-full p-4 rounded-2xl bg-[#071727] text-white border-2 border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors text-lg" 
+                   placeholder="Введите количество слайдов" 
+                 />
+                 <div v-if="errors.slidesQuantity" class="text-red-400 mt-2 text-sm">{{ errors.slidesQuantity }}</div>
+               </div>
+             </div>
+           </div>
+
+           <!-- Секция "Исходные материалы" -->
+           <div class="order-section mb-8">
+             <h3 class="section-title mb-4">Исходные материалы</h3>
+             <div class="materials-grid">
+               <div v-for="(mat, idx) in form.materials" :key="idx" class="material-card">
+                 <div class="material-preview">
+                   <div class="material-icon">📁</div>
+                 </div>
+                 <div class="material-content">
+                   <h5 class="material-title">Материал №{{ idx + 1 }}</h5>
+                   <p class="material-description">{{ mat.description || 'Описание материала' }}</p>
+                 </div>
+                 <button 
+                   type="button" 
+                   @click="removeMaterial(idx)" 
+                   class="material-remove"
+                   title="Удалить материал"
+                 >
+                   ×
+                 </button>
+               </div>
+             </div>
+             
+             <div class="material-inputs mt-6">
+               <div v-for="(mat, idx) in form.materials" :key="`input-${idx}`" class="material-input-row-wide">
+                 <div class="material-input-field">
+                   <label class="block mb-2 font-semibold text-base text-white">Тип материала</label>
+                   <input 
+                     v-model="mat.type" 
+                     placeholder="Например: Видео, Логотип, Фото" 
+                     class="w-full p-4 rounded-2xl bg-[#071727] text-white border-2 border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors text-lg" 
+                   />
+                 </div>
+                 <div class="material-input-field">
+                   <label class="block mb-2 font-semibold text-base text-white">Описание</label>
+                   <input 
+                     v-model="mat.description" 
+                     placeholder="Подробное описание материала" 
+                     class="w-full p-4 rounded-2xl bg-[#071727] text-white border-2 border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors text-lg" 
+                   />
+                 </div>
+                 <div class="material-input-field">
+                   <label class="block mb-2 font-semibold text-base text-white">Ссылка на файл</label>
+                   <input 
+                     v-model="mat.file_url" 
+                     placeholder="Ссылка на Google Drive, Dropbox и т.д." 
+                     class="w-full p-4 rounded-2xl bg-[#071727] text-white border-2 border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors text-lg" 
+                   />
+                 </div>
+               </div>
+             </div>
+             
+             <button 
+               type="button" 
+               @click="addMaterial" 
+               class="add-material-btn"
+             >
+               + Добавить исходный материал
+             </button>
+           </div>
+
+           <!-- Секция "Срок выполнения" -->
+           <div class="order-section mb-8">
+             <h3 class="section-title mb-4">Срок выполнения заказа</h3>
+             <div class="deadline-section">
+               <div class="deadline-info">
+                 <span class="deadline-text">Ориентировочная дата: {{ form.deadline || 'Не выбрана' }}</span>
+               </div>
+               <div class="deadline-inputs-wide">
+                 <div class="deadline-field-wide">
+                   <label class="block mb-3 font-semibold text-base text-white">Дата выполнения</label>
+                   <input 
+                     type="date" 
+                     v-model="form.deadline" 
+                     class="w-full p-4 rounded-2xl bg-[#071727] text-white border-2 border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors text-lg" 
+                   />
+                   <div v-if="errors.deadline" class="text-red-400 mt-2 text-sm">{{ errors.deadline }}</div>
+                 </div>
+               </div>
+             </div>
+           </div>
+
+           <!-- Секция "Тарифы и стоимость" -->
+           <div class="order-section mb-8">
+             <div class="bg-[#16243a] rounded-2xl p-6">
+               <h3 class="text-xl font-bold text-white mb-4">Тарифы и стоимость</h3>
+               
+               <!-- Загрузка -->
+               <div v-if="tariffLoading" class="text-white text-center py-8">
+                 <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+                 Загрузка тарифов...
+               </div>
+               
+               <!-- Ошибка -->
+               <div v-else-if="tariffError" class="text-red-400 mb-4 p-4 bg-red-900/20 rounded-lg">
+                 <strong>Ошибка загрузки:</strong> {{ tariffError }}
+                 <button @click="loadTariffData" class="ml-4 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm">
+                   Повторить
+                 </button>
+               </div>
+               
+               <!-- Тарифы и услуги -->
+               <div v-else-if="tariffs.length > 0" class="space-y-6">
+                 <!-- Матричная таблица тарифов и услуг -->
+                 <div class="mb-6">
+                   <h4 class="text-lg font-semibold text-white mb-3">Выберите тариф для каждой услуги:</h4>
+                   <div class="bg-gray-800/50 rounded-lg overflow-hidden">
+                     <table class="w-full">
+                       <thead class="bg-gray-700/50">
+                         <tr>
+                           <th class="px-4 py-3 text-left text-white font-semibold">Услуга</th>
+                           <th 
+                             v-for="tariff in tariffs" 
+                             :key="tariff.id"
+                             class="px-4 py-3 text-center text-white font-semibold tariff-header-cell"
+                             :class="{ 'has-tooltip': shouldShowTooltip(tariff.id), 'tooltip-active': hoveredTariff === tariff.id }"
+                             @click="toggleTooltip(tariff.id)"
+                           >
+                             {{ tariff.name }}
+                             <div v-if="shouldShowTooltip(tariff.id)" class="tooltip-icon">ℹ️</div>
+                           </th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         <!-- Базовые услуги -->
+                         <tr v-for="service in services" :key="service.id" class="hover:bg-gray-700/30">
+                           <td class="px-4 py-3 text-white font-medium">
+                             <label class="flex items-center cursor-pointer">
+                               <input 
+                                 type="checkbox" 
+                                 :checked="selectedServices[service.id]?.enabled || false"
+                                 @change="toggleService(service.id)"
+                                 class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500 mr-2"
+                               >
+                               {{ service.name }}
+                             </label>
+                           </td>
+                           <td 
+                             v-for="tariff in tariffs" 
+                             :key="tariff.id"
+                             class="px-4 py-3 text-center"
+                           >
+                             <label class="flex flex-col items-center cursor-pointer" :class="{ 'opacity-50': !selectedServices[service.id]?.enabled }">
+                               <input 
+                                 type="radio" 
+                                 :name="'service-' + service.id"
+                                 :value="tariff.id"
+                                 :checked="selectedServices[service.id]?.tariffId === tariff.id"
+                                 :disabled="!selectedServices[service.id]?.enabled"
+                                 @change="selectServiceTariff(service.id, tariff.id)"
+                                 class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500"
+                               >
+                               <span class="text-green-400 font-semibold mt-1">{{ formatPrice(getServicePrice(service.id, tariff.id)) }}₽</span>
+                             </label>
+                           </td>
+                         </tr>
+                       </tbody>
+                     </table>
+                   </div>
+                   
+                   <!-- Подсказка для тарифов -->
+                   <div v-if="tooltipVisible && hoveredTariff && getTooltipData(hoveredTariff)" class="tariff-tooltip bg-[#0D1F31] rounded-2xl p-6 mb-6 border-2 border-blue-500">
+                     <div class="tooltip-content">
+                       <h4 class="tooltip-title text-lg font-bold text-white mb-4">{{ getTooltipData(hoveredTariff).name }}</h4>
+                       
+                       <div class="tooltip-section mb-4">
+                         <h5 class="tooltip-subtitle text-md font-semibold text-blue-400 mb-2">Что входит в тариф:</h5>
+                         <ul class="tooltip-list">
+                           <li v-for="item in getTooltipData(hoveredTariff).includes" :key="item" class="tooltip-list-item">
+                             <span class="tooltip-checkmark">✓</span>
+                             <span class="tooltip-text">{{ item }}</span>
+                           </li>
+                         </ul>
+                       </div>
+                       
+                       <div class="tooltip-section">
+                         <h5 class="tooltip-subtitle text-md font-semibold text-blue-400 mb-2">{{ getTooltipData(hoveredTariff).example.title }}</h5>
+                         <p class="tooltip-example text-gray-300">{{ getTooltipData(hoveredTariff).example.description }}</p>
+                       </div>
+                     </div>
+                   </div>
+                   
+                   <!-- Выбранные услуги -->
+                   <div v-if="getSelectedServicesForDisplay().length > 0" class="selected-services bg-[#064e3b] rounded-2xl p-6 mb-6">
+                     <h4 class="text-lg font-semibold text-emerald-400 mb-4">Выбранные услуги:</h4>
+                     <div class="selected-services-list">
+                       <div 
+                         v-for="selectedService in getSelectedServicesForDisplay()" 
+                         :key="`${selectedService.serviceId}-${selectedService.tariffName}`"
+                         class="selected-service-item"
+                       >
+                         <div class="selected-service-info">
+                           <span class="selected-service-name">{{ selectedService.serviceName }}</span>
+                           <span class="selected-service-details">{{ selectedService.tariffName }} - {{ selectedService.price }}₽</span>
+                         </div>
+                         <button 
+                           @click="removeService(selectedService.serviceId)"
+                           class="remove-service-btn"
+                           title="Убрать услугу"
+                         >
+                           ✕
+                         </button>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+                 
+                 <!-- Итоговая цена -->
+                 <div class="bg-green-900/20 border border-green-500 rounded-lg p-4">
+                   <div class="flex justify-between items-center">
+                     <span class="text-white text-lg">Итоговая стоимость:</span>
+                                           <span class="text-green-400 font-bold text-2xl">{{ formatPrice(totalPrice) }}₽</span>
+                   </div>
+                 </div>
+               </div>
+               
+               <!-- Нет данных -->
+               <div v-else class="text-gray-400 text-center py-8">
+                 Тарифы не найдены для выбранного типа работы
+               </div>
+               
+               <!-- Кнопка перезагрузки -->
+               <button @click="loadTariffData" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                 Перезагрузить тарифы
+               </button>
+             </div>
+           </div>
+           
+         </div>
+       </div>
+       
+       <!-- Кнопки для второго шага - всегда внизу -->
+       <div v-if="step === 2" class="form-actions">
+         <div class="flex gap-4 justify-end mt-4">
+           <button type="button" @click="step = 1" class="px-6 py-3 rounded-3xl bg-gray-600 hover:bg-gray-700 btn-secondary">Назад</button>
+           <button type="button" @click="goToStep3" :disabled="loading" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-3xl transition-colors form-button">
+             {{ loading ? 'Загрузка...' : 'Выбрать исполнителя' }}
+           </button>
+         </div>
+       </div>
+      
+             <!-- Шаг 3: Выбор исполнителя -->
+       <div v-if="step === 3" class="form-step-container">
+         <div class="form-content">
+           <div class="mb-6">
+             <h3 class="text-xl font-bold mb-4">Подходящие исполнители</h3>
+             <div class="bg-[#16243a] rounded-2xl p-6 mb-6">
+               <div class="flex items-center gap-4 mb-4">
+                 <img :src="getWorkTypeIcon(selectedWorkType)" class="w-12 h-12 rounded-lg" alt="icon" />
+                 <div>
+                   <h4 class="font-semibold text-lg">{{ selectedWorkType?.name }}</h4>
+                   <p class="text-gray-400 text-sm">{{ form.description }}</p>
+                 </div>
+               </div>
+             </div>
+           </div>
+           
+           <!-- Список исполнителей -->
+           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 grid-2">
+             <div v-for="executor in filteredExecutors" :key="executor.id" 
+                  class="bg-[#16243a] rounded-2xl p-4 cursor-pointer hover:bg-[#1a2a3a] transition-colors">
+               <div class="flex items-start justify-between mb-3">
+                 <div class="flex items-center gap-3">
+                   <div class="relative">
+                     <img :src="executor.avatar || '/default-avatar.png'" 
+                          class="w-12 h-12 rounded-full object-cover" :alt="executor.name" />
+                     <div v-if="executor.is_verified" 
+                          class="absolute -bottom-1 -right-1 bg-green-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs">
+                       ✓
+                     </div>
+                   </div>
+                   <div>
+                     <h5 class="font-semibold">{{ executor.name }}</h5>
+                   </div>
+                 </div>
+               </div>
+               <div class="text-sm text-gray-400 mb-3">
+                 <p>{{ executor.completed_orders }} заказов всего</p>
+                 <!-- Специализации -->
+                 <div v-if="executor.specializations && executor.specializations.length" class="mt-2">
+                   <p class="text-xs text-gray-500 mb-1">Специализации:</p>
+                   <div class="flex flex-wrap gap-1">
+                     <span v-for="spec in executor.specializations" :key="spec" 
+                           class="text-xs bg-blue-600 text-white px-2 py-1 rounded-full">
+                       {{ getSpecializationLabel(spec) }}
+                     </span>
+                   </div>
+                 </div>
+               </div>
+               <button @click="selectExecutor(executor.id)" 
+                       class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                 Выбрать исполнителя
+               </button>
+             </div>
+           </div>
+         </div>
+       </div>
+       
+       <!-- Кнопки для третьего шага - всегда внизу -->
+       <div v-if="step === 3" class="form-actions">
+         <div class="flex gap-4 justify-end mt-6">
+           <button @click="step = 2" class="px-6 py-3 rounded-3xl bg-gray-600 hover:bg-gray-700 btn-secondary">
+             Назад
+           </button>
+           <button @click="createOrderWithoutExecutor" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-3xl form-button">
+             Создать без исполнителя
+           </button>
+         </div>
+       </div>
+    
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'CreateOrder',
+  components: {
+  },
+  data() {
+    return {
+      step: 1,
+      workTypes: [],
+      attributeTypes: [],
+             dynamicFields: [], // новые динамические поля
+      selectedWorkType: null,
+      form: {
+        work_type_id: '',
+        title: '',
+        attributes: {},
+        description: '',
+        deadline: '',
+        budget: '',
+        materials: [],
+        slidesQuantity: 1, // Количество слайдов для "Дизайн карточки для МП"
+      },
+      errors: {},
+      loading: false,
+      showExecutorsModal: false,
+      createdOrder: null,
+      executors: [],
+      selectedExecutorId: null,
+      // Данные для тарифов
+      tariffs: [],
+      services: [],
+      servicePrices: [],
+      totalPrice: 0,
+      tariffLoading: false,
+      tariffError: null,
+      selectedTariff: null,
+      selectedServices: {}, // Изменено: теперь объект {serviceId: {enabled: boolean, tariffId: number}}
+      hoveredTariff: null,
+      tooltipVisible: false,
+      lastSelected: {}, // Отслеживаем последний выбранный элемент для каждой услуги
+      tooltipData: {
+        1: { // work_type_id = 1 (Дизайн карточки для МП)
+          1: { // Базовый тариф
+            name: 'Базовый тариф',
+            includes: [
+              '1 вариант дизайна',
+              '2 правки включены',
+              'Готовые файлы в PNG/JPG',
+              'Базовые элементы дизайна'
+            ],
+            example: {
+              title: 'Пример базового дизайна',
+              description: 'Простая и чистая карточка с основными элементами: фото товара, название, цена, краткое описание'
+            }
+          },
+          2: { // Комфорт тариф
+            name: 'Комфорт тариф',
+            includes: [
+              '2 варианта дизайна на выбор',
+              '3 правки включены',
+              'Готовые файлы в PNG/JPG + PSD',
+              'Расширенные элементы дизайна',
+              'Инфографика и иконки'
+            ],
+            example: {
+              title: 'Пример комфорт дизайна',
+              description: 'Привлекательная карточка с инфографикой, качественными иконками, акцентами и продуманной композицией'
+            }
+          },
+          3: { // Рич тариф
+            name: 'Рич тариф',
+            includes: [
+              '3 варианта дизайна на выбор',
+              '5 правок включены',
+              'Все форматы файлов + исходники',
+              'Премиум элементы дизайна',
+              'Анимированные элементы',
+              'A/B тестирование вариантов'
+            ],
+            example: {
+              title: 'Пример премиум дизайна',
+              description: 'Профессиональная карточка с анимацией, премиум графикой, детальной инфографикой и максимальной конверсией'
+            }
+          }
+        }
+      }
+    }
+  },
+  computed: {
+    filteredExecutors() {
+      // Исключаем текущего пользователя из списка исполнителей
+      const currentUserId = this.getCurrentUserId();
+      return this.executors.filter(executor => executor.id !== currentUserId);
+    }
+  },
+  mounted() {
+    this.fetchWorkTypes();
+  },
+  methods: {
+    closeModal() {
+      if (this.step === 3) {
+        // Если мы на шаге 3, просто закрываем модал
+        this.$emit('close');
+      } else {
+        // Если мы на других шагах, сбрасываем форму
+        this.resetForm();
+        this.$emit('close');
+      }
+    },
+    resetForm() {
+      this.step = 1;
+      this.selectedWorkType = null;
+      this.form = {
+        work_type_id: '',
+        title: '',
+        attributes: {},
+        description: '',
+        deadline: '',
+        budget: '',
+        materials: [],
+        slidesQuantity: 1,
+      };
+      this.errors = {};
+      this.loading = false;
+      this.executors = [];
+      this.selectedExecutorId = null;
+      this.createdOrder = null;
+      this.selectedTariff = null;
+      this.selectedServices = {};
+      this.totalPrice = 0;
+      this.tariffs = [];
+      this.services = [];
+      this.servicePrices = [];
+    },
+    async fetchWorkTypes() {
+      const res = await this.$axios.get('/work-types')
+      this.workTypes = res.data
+    },
+    async fetchDynamicFields(workTypeId) {
+      const { data: rawFields } = await this.$axios.get(`/work-types/${workTypeId}/attributes`)
+      // Убираем дублирующее поле количества слайдов из динамических полей
+      this.dynamicFields = (rawFields || []).filter(f => f.name !== 'slides_count');
+      // Сбросить значения атрибутов при смене типа заказа
+      this.form.attributes = {};
+      
+      // Загружаем тарифы после выбора типа работы
+      await this.loadTariffData();
+    },
+    selectWorkType(type) {
+      this.selectedWorkType = type;
+      this.form.work_type_id = type.id;
+      this.form.title = type.name;
+      this.form.description = type.description;
+      this.errors = {};
+      this.step = 2;
+      this.fetchDynamicFields(type.id);
+    },
+    getWorkTypeIcon(type) {
+      if (!type) return '';
+      if (type.image) {
+        try {
+          return new URL(`../assets/${type.image}`, import.meta.url).href;
+        } catch {
+          return new URL('../assets/orders.png', import.meta.url).href;
+        }
+      }
+      return new URL('../assets/orders.png', import.meta.url).href;
+    },
+    
+          async loadTariffData() {
+        if (!this.selectedWorkType?.id) return;
+        
+        try {
+          this.tariffLoading = true;
+          this.tariffError = null;
+          
+          // Загружаем тарифы
+          const { data: tariffs } = await this.$axios.get('/tariffs')
+          this.tariffs = tariffs
+          
+          // Загружаем услуги для выбранного типа работы
+          const { data: servicesData } = await this.$axios.get(`/tariffs/work-type/${this.selectedWorkType.id}/services`)
+          this.services = servicesData.services || []
+          
+          // Инициализируем selectedServices для каждой услуги
+          this.services.forEach(service => {
+            if (!this.selectedServices[service.id]) {
+              this.selectedServices[service.id] = {
+                enabled: false,
+                tariffId: null
+              };
+            }
+          });
+          
+          // Автоматически выбираем первый тариф по умолчанию
+          if (this.tariffs.length > 0 && !this.selectedTariff) {
+            this.selectedTariff = this.tariffs[0];
+          }
+          
+          // Рассчитываем базовую цену
+          this.calculateTotalPrice();
+          
+        } catch (error) {
+          console.error('Ошибка загрузки тарифных данных:', error);
+          this.tariffError = error.message;
+          this.tariffs = [];
+          this.services = [];
+          this.selectedTariff = null;
+          this.selectedServices = {};
+        } finally {
+          this.tariffLoading = false;
+        }
+      },
+    
+          calculateTotalPrice() {
+      let total = 0;
+      
+      for (const [serviceId, serviceData] of Object.entries(this.selectedServices)) {
+        
+        if (serviceData.enabled && serviceData.tariffId) {
+          const priceNum = Number(this.getServicePrice(parseInt(serviceId), parseInt(serviceData.tariffId))) || 0;
+          const service = this.services.find(s => s.id === parseInt(serviceId));
+          
+          if (this.selectedWorkType?.name === 'Дизайн карточки для МП' && service && service.name === '1 слайд в карточке') {
+            const quantity = parseInt(this.form.slidesQuantity) || 1;
+            total += priceNum * quantity;
+          } else {
+            total += priceNum;
+          }
+        }
+      }
+      
+      this.totalPrice = Math.round((Number(total) || 0) * 100) / 100;
+    },
+    
+    addMaterial() {
+      this.form.materials.push({ type: '', description: '', file_url: '' });
+    },
+    removeMaterial(idx) {
+      this.form.materials.splice(idx, 1);
+    },
+    async submitOrder() {
+      this.errors = this.validateForm();
+      if (Object.keys(this.errors).length > 0) return;
+      this.loading = true;
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        // Собираем массив attributes с value_id для select и value для input
+        const attributes = this.dynamicFields.map(field => {
+          const value = this.form.attributes[field.id];
+          if (field.values && field.values.length) {
+            // select: value_id должен быть выбран
+            return { attribute_type_id: field.id, value_id: value };
+          } else {
+            // input: value_id не нужен, можно добавить value (если потребуется на бэке)
+            return { attribute_type_id: field.id, value: value };
+          }
+        });
+        const materials = this.form.materials.filter(m => m.type || m.description || m.file_url);
+        const calculatedPrice = this.totalPrice || this.form.budget || 1000;
+        const body = {
+          user_id: user.id,
+          work_type_id: this.form.work_type_id,
+          title: this.form.title || (this.selectedWorkType ? this.selectedWorkType.name : 'Без названия'),
+          description: this.form.description,
+          deadline: this.form.deadline,
+          budget: calculatedPrice,
+          attributes,
+          materials: materials,
+          // добавлено: данные тарифной системы и слайды
+          selected_services: this.selectedServices,
+          calculated_price: calculatedPrice,
+          slides_quantity: this.selectedWorkType?.name === 'Дизайн карточки для МП' ? this.form.slidesQuantity : null
+        };
+        const { data: orderData } = await this.$axios.post('/orders', body)
+        
+        this.createdOrder = {
+          ...orderData,
+          title: this.selectedWorkType.name,
+          description: this.form.description,
+          average_time: this.selectedWorkType.average_time,
+          average_price: this.selectedWorkType.average_price,
+          image: this.selectedWorkType.image
+        };
+        
+        // Загружаем исполнителей и переходим к шагу 3
+        await this.loadExecutors();
+        this.step = 3;
+        
+        // НЕ сбрасываем форму, чтобы данные остались для шага 3
+        this.loading = false;
+        
+        this.$emit('order-created');
+      } catch (e) {
+        alert(e.message || 'Ошибка создания заказа');
+      } finally {
+        this.loading = false;
+      }
+    },
+    validateForm() {
+      const errors = {};
+      // Убираем все обязательные проверки для быстрого тестирования
+      return errors;
+    },
+    
+    editCreatedOrder() {
+      // Возвращаемся к редактированию заказа
+      this.showExecutorsModal = false;
+      this.step = 2;
+      // Восстанавливаем данные формы
+      this.selectedWorkType = this.createdOrder;
+      this.form.work_type_id = this.createdOrder.id;
+      this.form.title = this.createdOrder.title;
+      this.form.description = this.createdOrder.description;
+    },
+    
+    updateBudget(price) {
+      this.form.budget = price;
+    },
+    
+    compareExecutors() {
+      // Логика для сравнения исполнителей
+      alert('Функция сравнения исполнителей будет реализована позже');
+    },
+    
+    async selectExecutor(executorId) {
+      try {
+        this.loading = true;
+        
+        // Создаем заказ с исполнителем
+        const order = await this.createOrder(executorId);
+        
+        // Закрываем окно создания заказа
+        this.$emit('close');
+        this.$emit('order-created', order);
+        
+        // Показываем уведомление
+        alert('Заказ успешно создан и отправлен исполнителю на согласование!');
+      } catch (error) {
+        console.error('Ошибка создания заказа с исполнителем:', error);
+        alert('Ошибка создания заказа: ' + error.message);
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async createOrderWithoutExecutor() {
+      this.loading = true;
+      
+      try {
+        // Создаем заказ без исполнителя
+        const order = await this.createOrder();
+        
+        // Закрываем модальное окно и обновляем список заказов
+        this.$emit('close');
+        this.$emit('order-created', order);
+        
+        // Показываем уведомление
+        alert('Заказ создан успешно!');
+      } catch (error) {
+        console.error('Ошибка создания заказа:', error);
+        alert('Ошибка создания заказа: ' + error.message);
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async createOrder(executorId = null) {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      // Собираем массив attributes с value_id для select и value для input
+      const attributes = this.dynamicFields.map(field => {
+        const value = this.form.attributes[field.id];
+        if (field.values && field.values.length && value) {
+          return { attribute_type_id: field.id, value_id: value };
+        } else if (value) {
+          return { attribute_type_id: field.id, value: value };
+        }
+        // Если значение не заполнено, пропускаем атрибут
+        return null;
+      }).filter(attr => attr !== null); // Убираем пустые атрибуты
+      
+      const materials = this.form.materials.filter(m => m.type || m.description || m.file_url);
+      
+      // Используем данные из новой системы выбора тарифов
+      const calculatedPrice = this.totalPrice || this.form.budget || 1000;
+       
+      const body = {
+        user_id: user.id,
+        work_type_id: this.form.work_type_id || 1,
+        title: this.form.title || (this.selectedWorkType ? this.selectedWorkType.name : 'Тестовый заказ'),
+        description: this.form.description || 'Описание заказа',
+        deadline: this.form.deadline || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        budget: calculatedPrice, // Используем рассчитанную цену
+        attributes: attributes || [],
+        materials: materials,
+        executor_id: executorId,
+        status: executorId ? 'pending_approval' : 'open', // Если есть исполнитель - статус "На согласовании", иначе "Открыт"
+        selected_services: this.selectedServices, // {serviceId: {enabled: boolean, tariffId: number}}
+        calculated_price: calculatedPrice,
+        slides_quantity: this.selectedWorkType?.name === 'Дизайн карточки для МП' ? this.form.slidesQuantity : null
+      };
+      
+      const { data } = await this.$axios.post('/orders', body)
+      return data
+    },
+
+    async createOrderWithExecutor(executorId) {
+      return await this.createOrder(executorId);
+    },
+
+    async loadExecutors() {
+      try {
+        // Определяем специализацию на основе типа заказа
+        const specialization = this.getSpecializationFromOrder();
+        
+        try {
+          const { data } = await this.$axios.get(`/executors/by-specialization`, { params: { specialization } })
+          this.executors = data
+        } catch {
+          console.error('Ошибка загрузки исполнителей');
+          // Показываем тестовые данные
+          this.executors = this.getMockExecutors();
+        }
+      } catch (error) {
+        console.error('Ошибка:', error);
+        this.executors = this.getMockExecutors();
+      }
+    },
+    
+    getSpecializationFromOrder() {
+      // Маппинг типов заказов на специализации
+      const orderTypeToSpecialization = {
+        'Дизайн карточки для МП': 'mp_card_design',
+        'Видео до 30 секунд': 'video',
+        'Цветокоррекция фото': 'color_correction',
+        'Оформление сторис': 'social_media',
+        'Дизайн визитки': 'business_card_design'
+      };
+      
+      return orderTypeToSpecialization[this.selectedWorkType?.name] || 'graphic_design';
+    },
+    
+    getMockExecutors() {
+      return [
+        {
+          id: 1,
+          name: 'Станислав Пузынин',
+          avatar: '/default-avatar.png',
+          completed_orders: 0,
+          hourly_rate: 500,
+          is_verified: true,
+          specializations: ['mp_card_design', 'business_card_design']
+        },
+        {
+          id: 2,
+          name: 'тестовый тест',
+          avatar: '/default-avatar.png',
+          completed_orders: 0,
+          hourly_rate: 500,
+          is_verified: true,
+          specializations: ['business_card_design', 'mp_card_design']
+        },
+        {
+          id: 3,
+          name: 'Второй Тестовый',
+          avatar: '/default-avatar.png',
+          completed_orders: 0,
+          hourly_rate: 500,
+          is_verified: true,
+          specializations: ['mp_card_design']
+        }
+      ];
+    },
+
+    async loadExecutorsByWorkType() {
+      try {
+        const token = localStorage.getItem('token');
+        const specialization = this.getSpecializationFromWorkType(this.selectedWorkType.name);
+        
+        try {
+          const { data } = await this.$axios.get(`/executors/by-specialization`, { params: { specialization } })
+          this.executors = data
+        } catch (e) {
+          console.error('Ошибка загрузки исполнителей:', e?.message)
+          this.executors = this.getMockExecutors()
+        }
+      } catch (error) {
+        console.error('Ошибка:', error);
+        this.executors = this.getMockExecutors();
+      }
+    },
+
+    getSpecializationFromWorkType(workTypeName) {
+      const workTypeToSpecialization = {
+        'Дизайн карточки для МП': 'mp_card_design',
+        'Видео до 30 секунд': 'video',
+        'Цветокоррекция фото': 'color_correction',
+        'Оформление сторис': 'social_media',
+        'Дизайн визитки': 'business_card_design'
+      };
+      
+      return workTypeToSpecialization[workTypeName] || 'graphic_design';
+    },
+
+    getSpecializationLabel(spec) {
+      const specializationMap = {
+        'video': 'Видео',
+        'color_correction': 'Цветокоррекция',
+        'motion_design': 'Моушн-дизайн',
+        'video_editing': 'Монтаж видео',
+        'graphic_design': 'Графический дизайн',
+        'logo_design': 'Дизайн логотипов',
+        'branding': 'Брендинг',
+        'presentation': 'Презентации',
+        'advertising': 'Рекламные макеты',
+        'social_media': 'Контент для соцсетей',
+        'mp_card_design': 'Дизайн карточки для МП',
+        'business_card_design': 'Дизайн визитки'
+      };
+      return specializationMap[spec] || spec;
+    },
+
+    getMockExecutors() {
+      return [
+        {
+          id: 1,
+          name: 'Станислав Пузынин',
+          avatar: '/default-avatar.png',
+          completed_orders: 0,
+          hourly_rate: 500,
+          is_verified: true,
+          specializations: ['mp_card_design', 'business_card_design']
+        },
+        {
+          id: 2,
+          name: 'тестовый тест',
+          avatar: '/default-avatar.png',
+          completed_orders: 0,
+          hourly_rate: 500,
+          is_verified: true,
+          specializations: ['business_card_design', 'mp_card_design']
+        },
+        {
+          id: 3,
+          name: 'Второй Тестовый',
+          avatar: '/default-avatar.png',
+          completed_orders: 0,
+          hourly_rate: 500,
+          is_verified: true,
+          specializations: ['mp_card_design']
+        }
+      ];
+    },
+
+    selectTariff(tariff) {
+      this.selectedTariff = tariff;
+      this.calculateTotalPrice();
+    },
+
+          getServicePrice(serviceId, tariffId) {
+      const service = this.services.find(s => s.id === serviceId);
+      if (!service || !service.prices) {
+        return 0;
+      }
+      const raw = service.prices[tariffId];
+      const price = typeof raw === 'string' ? parseFloat(raw) : Number(raw || 0);
+      return Number.isFinite(price) ? price : 0;
+    },
+
+    formatPrice(price) {
+      return Math.round(Number(price) || 0).toString();
+    },
+
+    async goToStep3() {
+      const errors = this.validateForm();
+      if (Object.keys(errors).length > 0) {
+        this.errors = errors;
+        return;
+      }
+      
+      this.loading = true;
+      
+      try {
+        // Загружаем исполнителей и переходим к шагу 3
+        await this.loadExecutors();
+        this.step = 3;
+      } catch (error) {
+        alert('Ошибка: ' + error.message);
+      } finally {
+        this.loading = false;
+      }
+    },
+
+          selectServiceTariff(serviceId, tariffId) {
+      if (!this.selectedServices[serviceId]) {
+        this.selectedServices[serviceId] = { enabled: false, tariffId: null };
+      }
+      
+      const lastSelectedKey = `service-${serviceId}`;
+      const currentSelection = `${serviceId}-${tariffId}`;
+      
+      // Если кликнули на уже выбранный элемент, отменяем выбор
+      if (this.lastSelected[lastSelectedKey] === currentSelection && this.selectedServices[serviceId].enabled) {
+        this.selectedServices[serviceId].enabled = false;
+        this.selectedServices[serviceId].tariffId = null;
+        delete this.lastSelected[lastSelectedKey];
+      } else {
+        // Для визиток - отключаем все остальные услуги (только одна может быть активна)
+        if (this.selectedWorkType?.name === 'Дизайн визитки') {
+          for (const [id, serviceData] of Object.entries(this.selectedServices)) {
+            if (parseInt(id) !== parseInt(serviceId)) {
+              serviceData.enabled = false;
+              serviceData.tariffId = null;
+              delete this.lastSelected[`service-${id}`];
+            }
+          }
+        }
+        
+        // Устанавливаем новый выбор
+        this.selectedServices[serviceId].tariffId = tariffId;
+        this.selectedServices[serviceId].enabled = true;
+        this.lastSelected[lastSelectedKey] = currentSelection;
+      }
+      
+      this.calculateTotalPrice();
+    },
+
+    toggleService(serviceId) {
+      if (!this.selectedServices[serviceId]) {
+        this.selectedServices[serviceId] = { enabled: false, tariffId: null };
+      }
+      
+      if (this.selectedWorkType?.name === 'Дизайн визитки') {
+        for (const [id, serviceData] of Object.entries(this.selectedServices)) {
+          if (parseInt(id) !== parseInt(serviceId)) {
+            serviceData.enabled = false;
+            serviceData.tariffId = null;
+          }
+        }
+        this.selectedServices[serviceId].enabled = true;
+      } else {
+        this.selectedServices[serviceId].enabled = !this.selectedServices[serviceId].enabled;
+        if (!this.selectedServices[serviceId].enabled) {
+          this.selectedServices[serviceId].tariffId = null;
+        } else if (!this.selectedServices[serviceId].tariffId) {
+          // Автовыбор тарифа по умолчанию при включении услуги
+          this.selectedServices[serviceId].tariffId = this.tariffs[0]?.id || null;
+        }
+      }
+      
+      this.calculateTotalPrice();
+    },
+
+    getCurrentUserId() {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      return user.id;
+    },
+    
+    // Методы для управления подсказками
+    toggleTooltip(tariffId) {
+      // Показываем подсказки только для "Дизайн карточки для МП" (work_type_id = 1)
+      if (this.shouldShowTooltip(tariffId)) {
+        if (this.hoveredTariff === tariffId && this.tooltipVisible) {
+          // Если подсказка уже открыта для этого тарифа, закрываем её
+          this.hoveredTariff = null
+          this.tooltipVisible = false
+        } else {
+          // Открываем подсказку для этого тарифа
+          this.hoveredTariff = tariffId
+          this.tooltipVisible = true
+        }
+      }
+    },
+    
+    shouldShowTooltip(tariffId) {
+      // Показываем подсказки только для "Дизайн карточки для МП" (work_type_id = 1)
+      return this.selectedWorkType?.id === 1 && this.tooltipData[this.selectedWorkType.id] && this.tooltipData[this.selectedWorkType.id][tariffId]
+    },
+    
+    getTooltipData(tariffId) {
+      if (this.shouldShowTooltip(tariffId)) {
+        return this.tooltipData[this.selectedWorkType.id][tariffId]
+      }
+      return null
+    },
+    
+    // Методы для управления выбранными услугами
+    removeService(serviceId) {
+      if (this.selectedServices[serviceId]) {
+        this.selectedServices[serviceId].enabled = false;
+        this.selectedServices[serviceId].tariffId = null;
+        delete this.lastSelected[`service-${serviceId}`];
+        this.calculateTotalPrice();
+      }
+    },
+    
+    getSelectedServicesForDisplay() {
+      const selected = [];
+      Object.keys(this.selectedServices).forEach(serviceId => {
+        const serviceData = this.selectedServices[serviceId];
+        if (serviceData.enabled && serviceData.tariffId) {
+          const service = this.services.find(s => s.id === parseInt(serviceId));
+          const tariff = this.tariffs.find(t => t.id === serviceData.tariffId);
+          if (service && tariff) {
+            selected.push({
+              serviceId: parseInt(serviceId),
+              serviceName: service.name,
+              tariffName: tariff.name,
+              price: this.getServicePrice(parseInt(serviceId), serviceData.tariffId)
+            });
+          }
+        }
+      });
+      return selected;
+    },
+  },
+  
+  // Watcher для пересчета цены при изменении количества слайдов
+  watch: {
+    'form.slidesQuantity': {
+      handler(newVal, oldVal) {
+        this.calculateTotalPrice();
+      },
+      immediate: false
+    }
+  }
+}
+</script>
+
+<style scoped>
+.step-indicator {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: #22304a;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  border: 2px solid #22304a;
+  transition: background 0.2s, border 0.2s;
+}
+.step-indicator.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+
+/* Стили для прокрутки и адаптивности формы */
+.form-step-container {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 8px;
+  margin-bottom: 1rem;
+}
+
+.form-content {
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 1rem;
+}
+
+.form-actions {
+  position: sticky;
+  bottom: 0;
+  background: #0D1F31;
+  padding: 1.5rem 0;
+  border-top: 1px solid #22304a;
+  margin-top: 0;
+  z-index: 10;
+  border-bottom-left-radius: 1.5rem;
+  border-bottom-right-radius: 1.5rem;
+}
+
+/* Стили для секций заказа */
+.order-section {
+  background: #0a1a2a;
+  border-radius: 1.5rem;
+  border: 1px solid #22304a;
+  padding: 1.5rem;
+  transition: border-color 0.2s ease;
+}
+
+.order-section:hover {
+  border-color: #3b82f6;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  margin-bottom: 1rem;
+}
+
+/* Стили для карточки заказа */
+.order-card {
+  background: #16243a;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border: 1px solid #22304a;
+}
+
+.order-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.order-icon {
+  width: 3rem;
+  height: 3rem;
+  background: #2a3950;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.order-info {
+  flex: 1;
+}
+
+.order-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.25rem;
+}
+
+.order-description {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  line-height: 1.4;
+}
+
+.order-meta {
+  display: flex;
+  gap: 1rem;
+}
+
+.meta-item {
+  background: #22304a;
+  color: #e2e8f0;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Стили для характеристик */
+.characteristics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.characteristic-item {
+  background: #16243a;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid #22304a;
+  transition: border-color 0.2s ease;
+}
+
+.characteristic-item:hover {
+  border-color: #3b82f6;
+}
+
+/* Новые широкие стили для характеристик */
+.characteristics-grid-wide {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+}
+
+.characteristic-item-wide {
+  background: #16243a;
+  padding: 1.5rem;
+  border-radius: 1.5rem;
+  border: 1px solid #22304a;
+  transition: border-color 0.2s ease;
+}
+
+.characteristic-item-wide:hover {
+  border-color: #3b82f6;
+}
+
+/* Стили для материалов */
+.materials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.material-card {
+  background: #16243a;
+  border-radius: 1rem;
+  padding: 1rem;
+  border: 1px solid #22304a;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+  transition: border-color 0.2s ease;
+}
+
+.material-card:hover {
+  border-color: #3b82f6;
+}
+
+.material-preview {
+  width: 3rem;
+  height: 3rem;
+  background: #2a3950;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.material-content {
+  flex: 1;
+}
+
+.material-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 0.25rem;
+}
+
+.material-description {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  line-height: 1.3;
+}
+
+.material-remove {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.material-remove:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+}
+
+.material-inputs {
+  background: #16243a;
+  border-radius: 1rem;
+  padding: 1rem;
+  border: 1px solid #22304a;
+}
+
+.material-input-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.material-input-row:last-child {
+  margin-bottom: 0;
+}
+
+/* Новые широкие стили для материалов */
+.material-input-row-wide {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #16243a;
+  border-radius: 1.5rem;
+  border: 1px solid #22304a;
+}
+
+.material-input-row-wide:last-child {
+  margin-bottom: 0;
+}
+
+.material-input-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.add-material-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.add-material-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+/* Стили для срока выполнения */
+.deadline-section {
+  background: #16243a;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border: 1px solid #22304a;
+}
+
+.deadline-info {
+  margin-bottom: 1rem;
+}
+
+.deadline-text {
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.deadline-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+/* Новые широкие стили для срока выполнения */
+.deadline-inputs-wide {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.deadline-field-wide {
+  background: #0a1a2a;
+  padding: 1.5rem;
+  border-radius: 1.5rem;
+  border: 1px solid #22304a;
+  transition: border-color 0.2s ease;
+}
+
+.deadline-field-wide:hover {
+  border-color: #3b82f6;
+}
+
+.deadline-field {
+  background: #0a1a2a;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid #22304a;
+}
+
+/* Улучшенные стили для полей */
+.field-group {
+  margin-bottom: 1rem;
+  background: #0a1a2a;
+  padding: 1.5rem;
+  border-radius: 1.5rem;
+  border: 1px solid #22304a;
+  transition: border-color 0.2s ease;
+}
+
+.field-group:hover {
+  border-color: #3b82f6;
+}
+
+.materials-section {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background: #0a1a2a;
+  border-radius: 1.5rem;
+  border: 1px solid #22304a;
+}
+
+/* Улучшенные отступы для текста */
+.form-content label {
+  margin-bottom: 0.75rem;
+  padding-left: 0;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.form-content input,
+.form-content select,
+.form-content textarea {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.form-content .text-red-400 {
+  margin-bottom: 1rem;
+  padding-left: 0;
+}
+
+/* Улучшенные стили для полей ввода */
+.form-input {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.form-input:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Стили для кнопок */
+.form-button {
+  font-weight: 600;
+  padding: 1rem 2rem;
+  border-radius: 1rem;
+  transition: all 0.2s ease;
+}
+
+.form-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-secondary {
+  font-weight: 600;
+  padding: 1rem 2rem;
+  border-radius: 1rem;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Стилизация скроллбара */
+.form-step-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.form-step-container::-webkit-scrollbar-track {
+  background: #22304a;
+  border-radius: 3px;
+}
+
+.form-step-container::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 3px;
+}
+
+.form-step-container::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
+/* Стили для таблиц тарифов */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  border: 1px solid #374151;
+  padding: 12px;
+  text-align: left;
+}
+
+th {
+  background-color: #374151;
+  font-weight: 600;
+  color: white;
+}
+
+td {
+  background-color: #1f2937;
+}
+
+tr:hover td {
+  background-color: #374151;
+}
+
+/* Адаптивные стили для мобильных устройств */
+@media (max-width: 768px) {
+  .form-step-container {
+    max-height: 60vh;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .form-actions {
+    padding: 0.75rem 0;
+    border-bottom-left-radius: 1.25rem;
+    border-bottom-right-radius: 1.25rem;
+  }
+  
+  .form-actions .flex {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .form-actions button {
+    width: 100%;
+  }
+  
+  .form-content label {
+    padding-left: 0.5rem;
+  }
+  
+  .form-content .text-red-400 {
+    padding-left: 0.5rem;
+  }
+  
+  .materials-section {
+    padding: 1rem;
+  }
+  
+  .field-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Адаптивные стили для нового дизайна */
+  .order-section {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .section-title {
+    font-size: 1.125rem;
+  }
+  
+  .characteristics-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .characteristics-grid-wide {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .characteristic-item-wide {
+    padding: 1rem;
+  }
+  
+  .materials-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .material-input-row {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .material-input-row-wide {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .deadline-inputs {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .deadline-inputs-wide {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .deadline-field-wide {
+    padding: 1rem;
+  }
+  
+  .order-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .order-meta {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .meta-item {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-step-container {
+    max-height: 50vh;
+  }
+  
+  .modal-content {
+    padding: 1rem;
+  }
+  
+  .step-indicator {
+    width: 2rem;
+    height: 2rem;
+    font-size: 1rem;
+  }
+  
+  .form-content label {
+    padding-left: 0.75rem;
+  }
+  
+  .form-content .text-red-400 {
+    padding-left: 0.75rem;
+  }
+  
+  .materials-section {
+    padding: 0.75rem;
+  }
+  
+  .form-actions {
+    border-bottom-left-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+  }
+  
+  /* Адаптивные стили для маленьких экранов */
+  .order-section {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .section-title {
+    font-size: 1rem;
+  }
+  
+  .order-card {
+    padding: 1rem;
+  }
+  
+  .characteristic-item {
+    padding: 0.75rem;
+  }
+  
+  .characteristic-item-wide {
+    padding: 0.75rem;
+  }
+  
+  .material-card {
+    padding: 0.75rem;
+  }
+  
+  .material-preview {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.25rem;
+  }
+  
+  .material-input-row-wide {
+    padding: 0.75rem;
+  }
+  
+  .deadline-section {
+    padding: 1rem;
+  }
+  
+  .deadline-field {
+    padding: 0.75rem;
+  }
+  
+  .deadline-field-wide {
+    padding: 0.75rem;
+  }
+}
+
+/* Стили для модального окна создания заказа */
+.create-order-modal {
+  width: 100%;
+  max-width: 98vw;
+  background: #0D1F31;
+  border-radius: 2rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .create-order-modal {
+    max-width: 98vw;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .create-order-modal {
+    max-width: 100vw;
+    padding: 0.75rem;
+  }
+}
+
+/* Стили для подсказок тарифов */
+.tariff-header-cell {
+  position: relative;
+  cursor: help;
+}
+
+.has-tooltip {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.has-tooltip:hover {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.tooltip-active {
+  background: rgba(59, 130, 246, 0.1) !important;
+}
+
+.tooltip-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 0.875rem;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.has-tooltip:hover .tooltip-icon,
+.tooltip-active .tooltip-icon {
+  opacity: 1;
+}
+
+.tariff-tooltip {
+  animation: fadeInUp 0.3s ease-out;
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tooltip-content {
+  max-width: 100%;
+}
+
+.tooltip-title {
+  color: #fff;
+  border-bottom: 2px solid #3b82f6;
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+.tooltip-section {
+  margin-bottom: 16px;
+}
+
+.tooltip-subtitle {
+  color: #60a5fa;
+  margin-bottom: 8px;
+}
+
+.tooltip-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tooltip-list-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  padding: 4px 0;
+}
+
+.tooltip-checkmark {
+  color: #22c55e;
+  font-weight: bold;
+  margin-right: 8px;
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.tooltip-text {
+  color: #e5e7eb;
+  line-height: 1.5;
+}
+
+.tooltip-example {
+  color: #d1d5db;
+  line-height: 1.6;
+  font-style: italic;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 12px;
+  border-radius: 8px;
+  border-left: 3px solid #3b82f6;
+}
+
+/* Адаптивные стили для подсказок */
+@media (max-width: 768px) {
+  .tariff-tooltip {
+    padding: 1rem;
+    margin: 0 -1rem 1.5rem -1rem;
+    border-radius: 1rem;
+  }
+  
+  .tooltip-title {
+    font-size: 1rem;
+  }
+  
+  .tooltip-subtitle {
+    font-size: 0.875rem;
+  }
+  
+  .tooltip-text {
+    font-size: 0.875rem;
+  }
+  
+  .tooltip-example {
+    font-size: 0.875rem;
+    padding: 8px;
+  }
+}
+
+/* Стили для выбранных услуг */
+.selected-services {
+  border: 2px solid #10b981;
+}
+
+.selected-services-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.selected-service-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 3px solid #10b981;
+  transition: background 0.2s ease;
+}
+
+.selected-service-item:hover {
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.selected-service-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.selected-service-name {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.selected-service-details {
+  color: #10b981;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.remove-service-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.remove-service-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.remove-service-btn:active {
+  transform: scale(0.95);
+}
+
+/* Адаптивные стили для выбранных услуг */
+@media (max-width: 768px) {
+  .selected-service-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .remove-service-btn {
+    align-self: flex-end;
+    margin-top: -32px;
+  }
+}
+</style> 
