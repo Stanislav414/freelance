@@ -596,76 +596,27 @@ export default {
     
     async contactExecutor() {
       try {
-        // Проверяем, авторизован ли пользователь
         const token = localStorage.getItem('token');
         if (!token) {
           this.$router.push('/login');
           return;
         }
 
-        // Получаем роль текущего пользователя
-        const currentRole = localStorage.getItem('role');
-        if (currentRole !== 'customer') {
-          alert('Связаться с исполнителем могут только заказчики');
-          return;
-        }
-
-        // Получаем ID текущего пользователя
-        const currentUserId = localStorage.getItem('user_id');
-        if (!currentUserId) {
-          alert('Ошибка: не удалось определить пользователя');
-          return;
-        }
-
-        // Получаем ID исполнителя из URL
+        // ID исполнителя из маршрута
         const executorId = this.$route.params.id;
 
-        // Создаем новый заказ с выбранным исполнителем
-        const orderData = {
+        // Создаём заказ с назначенным исполнителем (чат создастся автоматически на бэке)
+        const { data: order } = await this.$axios.post('/orders', {
           title: `Заказ для ${this.executor.name}`,
           description: 'Заказ создан через портфолио исполнителя',
-          work_type_id: 1, // Базовый тип работы
-          budget: 0, // Бюджет будет обсужден в чате
-          deadline: null, // Срок будет обсужден в чате
-          executor_id: executorId, // Назначаем исполнителя сразу
-          status: 'pending_approval' // Статус ожидания подтверждения
-        };
-
-        // Отправляем запрос на создание заказа
-        const response = await fetch('/api/orders', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify(orderData)
+          work_type_id: 1,
+          budget: 0,
+          executor_id: executorId,
+          status: 'pending_approval'
         });
 
-        if (!response.ok) {
-          throw new Error('Ошибка при создании заказа');
-        }
-
-        const order = await response.json();
-
-        // Создаем чат для заказа
-        const chatResponse = await fetch(`/api/chats/order/${order.id}`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
-          }
-        });
-
-        if (!chatResponse.ok) {
-          throw new Error('Ошибка при создании чата');
-        }
-
-        const chat = await chatResponse.json();
-
-        // Переходим к чату
-        this.$router.push(`/dashboard?tab=messages&chat=${chat.id}`);
-
+        // Переходим в раздел сообщений; конкретный чат подтянется списком
+        this.$router.push(`/dashboard?tab=messages`);
       } catch (error) {
         console.error('Ошибка при связи с исполнителем:', error);
         alert('Произошла ошибка при попытке связаться с исполнителем. Попробуйте позже.');

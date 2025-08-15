@@ -4,12 +4,11 @@ import router from './router'
 import axios from 'axios'
 import './styles.css'
 
-// Всегда используем полный URL для отладки
-
-//axios.defaults.baseURL = 'http://127.0.0.1:8000/api'
-
-axios.defaults.baseURL = 'https://3124dfbd3763.ngrok-free.app/api'
-axios.defaults.withCredentials = true
+// Базовый URL API берём из env, по умолчанию используем относительный '/api'
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
+axios.defaults.baseURL = apiBaseUrl
+// Для Bearer-токена куки не нужны
+axios.defaults.withCredentials = false
 
 axios.interceptors.request.use(config => {
     const token = localStorage.getItem('token')
