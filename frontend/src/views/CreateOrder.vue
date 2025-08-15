@@ -2360,15 +2360,23 @@ const calculatedPrice = this.totalPrice || 1000;
   
   .steps-indicator {
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
     padding: 0 20px;
     margin-bottom: 15px;
+    align-items: flex-start;
+  }
+  
+  .step-indicator {
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
   }
   
   .step-connector {
     width: 2px;
-    height: 25px;
-    margin: 3px 0;
+    height: 20px;
+    margin: 2px 0;
+    align-self: center;
   }
   
   .step-number {
@@ -2380,6 +2388,16 @@ const calculatedPrice = this.totalPrice || 1000;
   .search-box {
     width: 100%;
     margin-top: 15px;
+  }
+  
+  .search-input {
+    padding: 16px 16px 16px 50px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+  
+  .search-icon {
+    font-size: 20px;
   }
   
   .work-type-header {

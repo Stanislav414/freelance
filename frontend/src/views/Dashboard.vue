@@ -161,7 +161,7 @@
                      :key="'executor-' + executor.id" 
                      class="search-dropdown-item executor-item"
                      @mousedown="goToExecutorProfile(executor.id)">
-                  <img :src="executor.avatar || performerIcon" class="search-item-avatar" alt="Avatar" />
+                  <img :src="executor.avatar || getAssetUrl('performer.png')" class="search-item-avatar" alt="Avatar" />
                   <div class="search-item-content">
                     <div class="search-item-name">{{ executor.name }} {{ executor.surname }}</div>
                     <div class="search-item-details">
@@ -274,7 +274,7 @@
               <h4 class="search-section-title">Исполнители</h4>
               <div class="executors-grid">
                 <div v-for="executor in searchResults.executors" :key="executor.id" class="executor-card" @click="goToExecutorProfile(executor.id)">
-                  <img :src="executor.avatar || performerIcon" class="executor-avatar" alt="Avatar" />
+                  <img :src="executor.avatar || getAssetUrl('performer.png')" class="executor-avatar" alt="Avatar" />
                   <div class="executor-info">
                     <h5 class="executor-name">{{ executor.name }} {{ executor.surname }}</h5>
                     
@@ -1178,6 +1178,15 @@ export default {
       // Пока используем только статичные аватарки по роли
       const role = this.role || localStorage.getItem('role') || 'customer';
       return role === 'customer' ? customerIcon : performerIcon;
+    },
+    
+    getAssetUrl(name) {
+      try {
+        return new URL(`../assets/${name}`, import.meta.url).href;
+      } catch (error) {
+        console.error(`Error loading asset ${name}:`, error);
+        return '#';
+      }
     },
     
     async updateUserDataForRole(role) {
@@ -2552,6 +2561,48 @@ export default {
   .role-btn-compact {
     padding: 6px 10px;
     font-size: 12px;
+  }
+  
+  /* Мобильные стили для поиска */
+  .search-container {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .search-dropdown-container {
+    width: 100%;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 16px;
+  }
+  
+  .search-btn {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 14px;
+    border-radius: 8px;
+  }
+  
+  /* Мобильные стили для нижней навигации */
+  .bottom-nav {
+    padding: 8px 16px;
+  }
+  
+  .nav-item {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  .nav-item.active {
+    background: transparent;
+    color: #3b82f6;
+  }
+  
+  .nav-item:not(.active) {
+    color: #9ca3af;
   }
 }
 </style>
