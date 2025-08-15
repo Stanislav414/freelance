@@ -853,6 +853,13 @@ export default {
     if (this.form.materials.length === 0) {
       this.addMaterial();
     }
+    // Добавляем обработчик клавиши Escape
+    document.addEventListener('keydown', this.handleKeydown);
+  },
+  
+  beforeUnmount() {
+    // Удаляем обработчик при размонтировании
+    document.removeEventListener('keydown', this.handleKeydown);
   },
   watch: {
     workTypes: {
@@ -896,6 +903,7 @@ export default {
       event.target.style.display = 'none';
     },
     closeModal() {
+      console.log('Закрытие модального окна');
       if (this.step === 3) {
         // Если мы на шаге 3, просто закрываем модал
         this.$emit('close');
@@ -903,6 +911,12 @@ export default {
         // Если мы на других шагах, сбрасываем форму
         this.resetForm();
         this.$emit('close');
+      }
+    },
+    
+    handleKeydown(event) {
+      if (event.key === 'Escape') {
+        this.closeModal();
       }
     },
     resetForm() {
@@ -1760,11 +1774,19 @@ const calculatedPrice = this.totalPrice || 1000;
 .step-indicator.active .step-number {
   background: #3b82f6;
   color: white;
+  font-weight: 700;
 }
 
 .step-indicator.completed .step-number {
   background: #10b981;
   color: white;
+  font-weight: 700;
+}
+
+.step-indicator .step-number {
+  background: #374151;
+  color: #9ca3af;
+  font-weight: 600;
 }
 
 .step-connector {
@@ -2360,9 +2382,9 @@ const calculatedPrice = this.totalPrice || 1000;
   
   .steps-indicator {
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
     padding: 0 20px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     align-items: flex-start;
   }
   
@@ -2370,12 +2392,13 @@ const calculatedPrice = this.totalPrice || 1000;
     flex-direction: row;
     align-items: center;
     width: 100%;
+    font-size: 14px;
   }
   
   .step-connector {
     width: 2px;
-    height: 20px;
-    margin: 2px 0;
+    height: 16px;
+    margin: 4px 0;
     align-self: center;
   }
   
@@ -2383,6 +2406,9 @@ const calculatedPrice = this.totalPrice || 1000;
     width: 32px;
     height: 32px;
     font-size: 14px;
+    margin-right: 10px;
+    color: #fff;
+    font-weight: 600;
   }
   
   .search-box {

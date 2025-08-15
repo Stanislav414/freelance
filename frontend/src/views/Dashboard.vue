@@ -401,14 +401,14 @@
     </transition>
 
     <!-- Мобильная навигация -->
-    <BottomNav />
+    <!-- <BottomNav /> -->
   </div>
 </template>
 
 <script>
 import CreateOrder from "./CreateOrder.vue";
 import UserDropdown from "../components/UserDropdown.vue";
-import BottomNav from "../components/BottomNav.vue";
+// import BottomNav from "../components/BottomNav.vue";
 import performer from '@/assets/performer.png';
 import OrderDetailsModal from "./OrderDetailsModal.vue";
 import OrderCard from "../components/OrderCard.vue";
@@ -423,7 +423,7 @@ import performerIcon from '@/assets/performer.png';
 import editIco from '@/assets/edit_ico.png';
 
 export default {
-  components: { CreateOrder, UserDropdown, BottomNav, OrderDetailsModal, OrderCard, ChatInterface, ReviewModal },
+  components: { CreateOrder, UserDropdown, OrderDetailsModal, OrderCard, ChatInterface, ReviewModal },
   data() {
     return {
       user: {

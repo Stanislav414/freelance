@@ -95,25 +95,29 @@ li:active {
   transform: scale(0.95);
 }
 
+/* Стили для элементов навигации */
+li {
+  transition: opacity 0.2s ease;
+}
+
 /* Подсветка активного элемента */
 .text-blue-400 {
   color: #60a5fa;
 }
 
-/* Мобильные стили для неактивных кнопок */
+/* Мобильные стили для навигации */
 @media (max-width: 480px) {
   li {
-    opacity: 0.7;
-    pointer-events: none;
-  }
-  
-  li:first-child {
-    opacity: 1;
-    pointer-events: auto;
+    transition: all 0.2s ease;
   }
   
   .text-blue-400 {
     color: #3b82f6;
+  }
+  
+  /* Hover эффекты для мобильных */
+  li:hover {
+    opacity: 0.8;
   }
 }
 
