@@ -4,13 +4,13 @@
       <!-- Левая часть -->
       <div class="hidden md:flex w-1/2 bg-[#146AF1] flex-col justify-center p-8 text-white relative">
   
-        <div class="absolute top-1 left-1 p-4 flex gap-5 items-center">
-          <h1 class="text-4xl font-sans font-semibold leading-none">Биржа фриланса</h1>
-          <div class="w-[193px] overflow-hidden">
-            <p class="text-[13px] opacity-80 break-words leading-none">
-             
-            </p>
-          </div>
+        <div class="text-center mt-4 mb-1">
+          <h1 class="text-2xl lg:text-4xl font-bold leading-tight mb-2 text-white drop-shadow-2xl">
+            Когда дедлайн был "ещё вчера"
+          </h1>
+          <p class="text-sm lg:text-lg leading-relaxed text-white drop-shadow-lg">
+            Найдите дизайнера или монтажёра быстрее, чем приедет такси!
+          </p>
         </div>
   
         <div class="mt-8 mb-4 flex justify-center items-center ">
@@ -21,19 +21,23 @@
           >
         </div>
   
-        <div class="text-center">
-          <h2 class="text-3xl font-sans font-semibold mt-8">Твой доход — твои правила</h2>
-          <p class="opacity-80 mt-4 max-w-2xl mx-auto">
-            Студенты берут заказы от вуза и проверенных заказчиков, получают экспертные отзывы и строят портфолио. Заказчики — доступ к проверенным исполнителям из числа студентов. Гибкий график, первый опыт и доход без отрыва от учебы
+        <div class="text-center mt-4 mb-1">
+          <h2 class="text-xl lg:text-3xl font-bold mb-3 text-white drop-shadow-2xl">
+            SuriTask — умная фриланс платформа
+          </h2>
+          <p class="text-xs lg:text-base leading-relaxed text-white drop-shadow-lg max-w-xs lg:max-w-xl mx-auto">
+            где заказчики мгновенно получают готовую подборку подходящих исполнителей, а фрилансеры «в онлайне» первыми берут горящие заказы.
           </p>
         </div>
       </div>
   
       <!-- Правая часть -->
       <div class="w-full md:w-1/2 bg-[#071727] text-gray-100 flex flex-col justify-center items-center p-6">
-        <h1 class="text-4xl font-sans font-semibold mb-4">Выберите свою роль</h1>
+        <h1 class="text-4xl font-bold mb-4 text-white drop-shadow-lg">
+          Создать первый заказ — бесплатно
+        </h1>
         <p class="text-gray-400 mt-2 mb-6 text-center text-sm">
-            Вы можете в любой момент изменить это значение в настройках
+            Вы можете быть заказчиком и исполнителем одновременно
         </p>
 
         <!-- Карточки ролей слайдер с анимацией -->
@@ -102,7 +106,7 @@ export default {
       roles: [
         {
           title: 'Заказчик',
-          desc: 'Найдите талантливых исполнителей среди студентов, принимайте быстрые и качественные заказы',
+          desc: 'Найдите талантливых исполнителей, принимайте быстрые и качественные заказы',
           bg: cards2,
           avatar: customer,
         },

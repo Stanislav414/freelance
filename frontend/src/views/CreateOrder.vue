@@ -111,8 +111,8 @@
                       <textarea 
                         v-model="form.description" 
                         rows="6" 
-                        class="w-full p-4 rounded-2xl bg-[#071727] text-white border-2 border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors resize-none text-lg" 
-                        placeholder="Подробно опишите вашу задачу, детали, пожелания, требования к результату..."
+                        class="w-full p-4 rounded-2xl bg-[#071727] text-white border-2 border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors resize-none text-lg placeholder-gray-400" 
+                        :placeholder="selectedWorkType?.description || 'Подробно опишите вашу задачу, детали, пожелания, требования к результату...'"
                       ></textarea>
                       <div v-if="errors.description" class="text-red-400 mt-2 text-sm">{{ errors.description }}</div>
                     </div>
@@ -209,8 +209,8 @@
                             <label class="block mb-2 font-medium text-white">Тип материала</label>
                             <input 
                               v-model="mat.type" 
-                              class="w-full p-3 rounded-xl bg-[#071727] text-white border border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors" 
-                              placeholder="Например: Логотип, Фото, Текст..." 
+                              class="w-full p-3 rounded-xl bg-[#071727] text-white border border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors placeholder-gray-400" 
+                              placeholder="Например: Логотип, Фото, Текст..."
                             />
                           </div>
                           <div class="material-field">
@@ -218,16 +218,16 @@
                             <textarea 
                               v-model="mat.description" 
                               rows="3" 
-                              class="w-full p-3 rounded-xl bg-[#071727] text-white border border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors resize-none" 
-                              placeholder="Подробное описание материала..." 
+                              class="w-full p-3 rounded-xl bg-[#071727] text-white border border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors resize-none placeholder-gray-400" 
+                              placeholder="Подробное описание материала..."
                             ></textarea>
                           </div>
                           <div class="material-field">
                             <label class="block mb-2 font-medium text-white">Файл (URL)</label>
                             <input 
                               v-model="mat.file_url" 
-                              class="w-full p-3 rounded-xl bg-[#071727] text-white border border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors" 
-                              placeholder="Ссылка на файл (Google Drive, Dropbox, etc.)" 
+                              class="w-full p-3 rounded-xl bg-[#071727] text-white border border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors placeholder-gray-400" 
+                              placeholder="Ссылка на файл (Google Drive, Dropbox, etc.)"
                             />
                           </div>
                         </div>
@@ -251,6 +251,7 @@
                         <input 
                           v-model="form.deadline" 
                           type="date" 
+                          :min="minDate"
                           class="w-full p-4 rounded-2xl bg-[#071727] text-white border-2 border-[#22304a] focus:border-blue-500 focus:outline-none transition-colors text-lg" 
                         />
                         <div v-if="errors.deadline" class="text-red-400 mt-2 text-sm">{{ errors.deadline }}</div>
@@ -845,6 +846,12 @@ export default {
       // Исключаем текущего пользователя из списка исполнителей
       const currentUserId = this.getCurrentUserId();
       return this.executors.filter(executor => executor.id !== currentUserId);
+    },
+    minDate() {
+      // Минимальная дата - завтра от текущей даты
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tomorrow.toISOString().split('T')[0];
     }
   },
   mounted() {
@@ -970,7 +977,7 @@ export default {
       this.selectedWorkType = type;
       this.form.work_type_id = type.id;
       this.form.title = type.name;
-      this.form.description = type.description;
+      this.form.description = ''; // Очищаем поле описания, чтобы placeholder был виден
       this.errors = {};
       
       // Автоматический переход на второй шаг через задержку (как в тестовом файле)
@@ -1169,7 +1176,20 @@ export default {
     },
     validateForm() {
       const errors = {};
-      // Убираем все обязательные проверки для быстрого тестирования
+      
+      // Проверка минимальной даты
+      if (this.form.deadline) {
+        const selectedDate = new Date(this.form.deadline);
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0); // Сбрасываем время
+        selectedDate.setHours(0, 0, 0, 0); // Сбрасываем время
+        
+        if (selectedDate < tomorrow) {
+          errors.deadline = 'Дата выполнения должна быть не раньше завтрашнего дня';
+        }
+      }
+      
       return errors;
     },
     

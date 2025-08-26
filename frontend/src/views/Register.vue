@@ -4,13 +4,13 @@
     <!-- Левая часть -->
     <div class="hidden md:flex w-1/2 bg-[#146AF1] flex-col justify-center p-8 text-white relative">
 
-      <div class="absolute top-1 left-1 p-4 flex gap-5 items-center">
-        <h1 class="text-4xl font-sans font-semibold leading-none">Биржа фриланса</h1>
-        <div class="w-[193px] overflow-hidden">
-          <p class="text-[13px] opacity-80 break-words leading-none">
-           
-          </p>
-        </div>
+      <div class="text-center mt-4 mb-1">
+        <h1 class="text-2xl lg:text-4xl font-bold leading-tight mb-2 text-white drop-shadow-2xl">
+          Когда дедлайн был "ещё вчера"
+        </h1>
+        <p class="text-sm lg:text-lg leading-relaxed text-white drop-shadow-lg">
+          Найдите дизайнера или монтажёра быстрее, чем приедет такси!
+        </p>
       </div>
 
       <div class="mt-8 mb-4 flex justify-center items-center ">
@@ -21,10 +21,12 @@
         >
       </div>
 
-      <div class="text-center">
-        <h2 class="text-3xl font-sans font-semibold mt-8">Твой доход — твои правила</h2>
-        <p class="opacity-80 mt-4 max-w-2xl mx-auto">
-          Студенты берут заказы от вуза и проверенных заказчиков, получают экспертные отзывы и строят портфолио. Заказчики — доступ к проверенным исполнителям из числа студентов. Гибкий график, первый опыт и доход без отрыва от учебы
+      <div class="text-center mt-4 mb-1">
+        <h2 class="text-xl lg:text-3xl font-bold mb-3 text-white drop-shadow-2xl">
+          SuriTask — умная фриланс платформа
+        </h2>
+        <p class="text-xs lg:text-base leading-relaxed text-white drop-shadow-lg max-w-xs lg:max-w-xl mx-auto">
+          где заказчики мгновенно получают готовую подборку подходящих исполнителей, а фрилансеры «в онлайне» первыми берут горящие заказы.
         </p>
       </div>
     </div>
@@ -62,18 +64,64 @@
             placeholder="Почта"
             required />
         <div v-if="emailError" class="text-red-500 text-sm mt-1">{{ emailError }}</div>
-        <input
-            class="w-full p-3 rounded-[10px] border border-warmGray-100 bg-gray-900 text-warmGray placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-warmGray-100"
-            v-model="password"
-            type="password"
-            placeholder="Пароль"
-            required />
-        <input
-            class="w-full p-3 rounded-[10px] border border-warmGray-100 bg-gray-900 text-warmGray placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-warmGray-100"
-            v-model="password_confirmation"
-            type="password"
-            placeholder="Подтвердите пароль"
-            required />
+        <div class="relative">
+          <input
+              class="w-full p-3 rounded-[10px] border border-warmGray-100 bg-gray-900 text-warmGray placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-warmGray-100 pr-20"
+              v-model="password"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="Пароль"
+              required />
+          <div class="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+            <button 
+              type="button"
+              @click="togglePasswordVisibility"
+              class="bg-gray-700 text-gray-200 text-xs px-2 py-1 rounded-md hover:bg-gray-600 transition"
+              :title="showPassword ? 'Скрыть пароль' : 'Показать пароль'"
+            >
+              <svg v-if="showPassword" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+              </svg>
+              <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+            </button>
+            <button 
+              type="button"
+              @click="generatePassword"
+              class="bg-blue-600 text-white text-xs px-2 py-1 rounded-md hover:bg-blue-700 transition"
+              title="Сгенерировать пароль"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="relative">
+          <input
+              class="w-full p-3 rounded-[10px] border border-warmGray-100 bg-gray-900 text-warmGray placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-warmGray-100 pr-12"
+              v-model="password_confirmation"
+              :type="showPasswordConfirmation ? 'text' : 'password'"
+              placeholder="Подтвердите пароль"
+              required />
+          <div class="absolute right-2 top-1/2 -translate-y-1/2">
+            <button 
+              type="button"
+              @click="togglePasswordConfirmationVisibility"
+              class="bg-gray-700 text-gray-200 text-xs px-2 py-1 rounded-md hover:bg-gray-600 transition"
+              :title="showPasswordConfirmation ? 'Скрыть пароль' : 'Показать пароль'"
+            >
+              <svg v-if="showPasswordConfirmation" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+              </svg>
+              <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
         <button type="submit" class="w-full p-3 rounded-[10px] bg-blue-500 hover:bg-blue-600 text-white font-sans transition">
           Зарегистрироваться
         </button>
@@ -128,7 +176,9 @@ export default {
       password_confirmation: '',
       error: '',
       emailError: '',
-      showPasswordError: false
+      showPasswordError: false,
+      showPassword: false,
+      showPasswordConfirmation: false
     }
   },
   methods: {
@@ -166,6 +216,43 @@ export default {
     },
     closePasswordError() {
       this.showPasswordError = false
+    },
+    togglePasswordVisibility() {
+      this.showPassword = !this.showPassword
+    },
+    togglePasswordConfirmationVisibility() {
+      this.showPasswordConfirmation = !this.showPasswordConfirmation
+    },
+    generatePassword() {
+      // Генерируем безопасный пароль: 12 символов с буквами, цифрами и символами
+      const lowercase = 'abcdefghijklmnopqrstuvwxyz'
+      const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+      const numbers = '0123456789'
+      const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?'
+      
+      let password = ''
+      
+      // Добавляем по одному символу каждого типа для гарантии
+      password += lowercase[Math.floor(Math.random() * lowercase.length)]
+      password += uppercase[Math.floor(Math.random() * uppercase.length)]
+      password += numbers[Math.floor(Math.random() * numbers.length)]
+      password += symbols[Math.floor(Math.random() * symbols.length)]
+      
+      // Добавляем остальные символы
+      const allChars = lowercase + uppercase + numbers + symbols
+      for (let i = 4; i < 12; i++) {
+        password += allChars[Math.floor(Math.random() * allChars.length)]
+      }
+      
+      // Перемешиваем символы
+      password = password.split('').sort(() => Math.random() - 0.5).join('')
+      
+      this.password = password
+      this.password_confirmation = password
+      
+      // Показываем пароли для удобства
+      this.showPassword = true
+      this.showPasswordConfirmation = true
     }
   }
 }

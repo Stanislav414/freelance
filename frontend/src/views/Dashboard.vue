@@ -1,14 +1,20 @@
 <template>
-  <div class="dashboard-bg min-h-screen w-full flex justify-center items-start py-8">
-    <div class="dashboard-container w-full max-w-[1400px] flex gap-8 container-padding">
+  <div class="dashboard-bg min-h-screen w-full flex flex-col">
+    <div class="dashboard-main-content flex justify-center items-start py-8 flex-1">
+      <div class="dashboard-container w-full max-w-[1400px] flex gap-8 container-padding">
       <!-- Левая панель (скрыта на мобильных) -->
       <aside class="w-72 flex flex-col gap-6 hidden md:flex">
         <UserDropdown :user="userWithAvatar" @logout="logout" class="mb-2" />
         <div class="menu-block bg-[#0D1F31] rounded-3xl w-full p-2 flex flex-col gap-0">
-          <div class="role-switcher-oval flex items-center justify-between rounded-full p-1 bg-[#16243a] w-full" style="box-sizing: border-box;">
-            <button :class="['role-btn-oval', role === 'customer' ? 'active' : '']" @click="setRole('customer')">Заказчик</button>
-            <button :class="['role-btn-oval', role === 'executor' ? 'active' : '']" @click="setRole('executor')">Исполнитель</button>
-          </div>
+          <UnifiedSwitcher
+            v-model="role"
+            type="segmented"
+            :options="[
+              { value: 'customer', label: 'Заказчик' },
+              { value: 'executor', label: 'Исполнитель' }
+            ]"
+            @update:modelValue="setRole"
+          />
           <div v-for="item in currentMenu" :key="`${menuKey}-${item.value}`" class="flex items-center gap-3 p-3 rounded-2xl hover:bg-[#146AF128] cursor-pointer"
             :class="{ 'bg-[#22304a]': currentTab === item.value }"
             @click="saveCurrentTab(item.value)">
@@ -71,14 +77,15 @@
           <!-- Переключатель ролей -->
           <div class="mobile-menu-section">
             <div class="mobile-menu-title">Роль</div>
-            <div class="role-switcher-compact">
-              <button :class="['role-btn-compact', role === 'customer' ? 'active' : '']" @click="setRole('customer')">
-                Заказчик
-              </button>
-              <button :class="['role-btn-compact', role === 'executor' ? 'active' : '']" @click="setRole('executor')">
-                Исполнитель
-              </button>
-            </div>
+            <UnifiedSwitcher
+              v-model="role"
+              type="segmented"
+              :options="[
+                { value: 'customer', label: 'Заказчик' },
+                { value: 'executor', label: 'Исполнитель' }
+              ]"
+              @update:modelValue="setRole"
+            />
           </div>
           
           <!-- Навигация -->
@@ -314,7 +321,7 @@
           <div v-else>
             <!-- Чат для вкладки "Сообщения" -->
             <div v-if="currentTab === 'messages'" class="chat-container">
-              <ChatInterface :currentRole="role" />
+              <ChatInterface :currentRole="role" :createdChatId="createdChatId" />
             </div>
             
             <!-- Заказы для остальных вкладок -->
@@ -344,7 +351,108 @@
           </div>
         </section>
       </main>
+      </div>
     </div>
+    
+    <!-- Подвал (Footer) -->
+    <footer class="dashboard-footer">
+      <div class="footer-container">
+        <div class="footer-content">
+          <!-- Логотип и описание -->
+          <div class="footer-brand">
+            <div class="footer-logo">
+              <span class="logo-text">SuriTask</span>
+            </div>
+            <p class="footer-description">
+              Умная фриланс платформа для быстрого поиска исполнителей и заказов
+            </p>
+          </div>
+          
+          <!-- Ссылки -->
+          <div class="footer-links">
+            <div class="footer-section">
+              <h4 class="footer-section-title">Поддержка</h4>
+              <ul class="footer-links-list">
+                <li><a href="#" class="footer-link" @click="openSupportChat">
+                  <svg class="footer-link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                  </svg>
+                  Чат с техподдержкой
+                </a></li>
+                <li><a href="#" class="footer-link" @click="openFAQ">
+                  <svg class="footer-link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  FAQ
+                </a></li>
+              </ul>
+            </div>
+            
+            <div class="footer-section">
+              <h4 class="footer-section-title">Документы</h4>
+              <ul class="footer-links-list">
+                <li><a href="#" class="footer-link" @click="openTerms">
+                  <svg class="footer-link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                  Пользовательское соглашение
+                </a></li>
+                <li><a href="#" class="footer-link" @click="openPrivacy">
+                  <svg class="footer-link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                  </svg>
+                  Политика конфиденциальности
+                </a></li>
+                <li><a href="#" class="footer-link" @click="openRefund">
+                  <svg class="footer-link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                  </svg>
+                  Политика возвратов
+                </a></li>
+              </ul>
+            </div>
+            
+            <div class="footer-section">
+              <h4 class="footer-section-title">Контакты</h4>
+              <ul class="footer-links-list">
+                <li><a href="mailto:suritask.help@gmail.com" class="footer-link">
+                  <svg class="footer-link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                  </svg>
+                  suritask.help@gmail.com
+                </a></li>
+                <li><a href="tel:+78001234567" class="footer-link">
+                  <svg class="footer-link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                  </svg>
+                  8 (800) 123-45-67
+                </a></li>
+                <li><a href="#" class="footer-link" @click="openTelegram">
+                  <svg class="footer-link-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                  </svg>
+                  Telegram канал
+                </a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Нижняя часть футера -->
+        <div class="footer-bottom">
+          <div class="footer-bottom-content">
+            <p class="footer-copyright">
+              © 2025 SuriTask. Все права защищены.
+            </p>
+            <div class="footer-social">
+              
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+
     <!-- Модалка тестового режима -->
     <transition name="fade">
       <div v-if="showTestNotice" class="modal-overlay" @click.self="showTestNotice=false">
@@ -408,6 +516,7 @@
 <script>
 import CreateOrder from "./CreateOrder.vue";
 import UserDropdown from "../components/UserDropdown.vue";
+import UnifiedSwitcher from "../components/UnifiedSwitcher.vue";
 // import BottomNav from "../components/BottomNav.vue";
 import performer from '@/assets/performer.png';
 import OrderDetailsModal from "./OrderDetailsModal.vue";
@@ -423,26 +532,41 @@ import performerIcon from '@/assets/performer.png';
 import editIco from '@/assets/edit_ico.png';
 
 export default {
-  components: { CreateOrder, UserDropdown, OrderDetailsModal, OrderCard, ChatInterface, ReviewModal },
+  components: { CreateOrder, UserDropdown, UnifiedSwitcher, OrderDetailsModal, OrderCard, ChatInterface, ReviewModal },
   data() {
     return {
-      user: {
-        ...JSON.parse(localStorage.getItem('user') || '{}'),
-      },
+      user: null,
+      role: 'customer',
+      currentTab: 'all',
       orders: [],
-      allOrders: [], // Все заказы для поиска
-      allExecutors: [], // Все исполнители для поиска
-      userOrders: [], // Кэш заказов пользователя
-      openOrders: [], // Кэш открытых заказов
-      isLoadingOrders: false, // Индикатор загрузки
-      showCreateOrderModal: false,
-      detailedOrder: null, // Для подробного заказа
-      loadingOrder: false, // Для лоадера
-      showOrderModal: false, // Для модального окна
-      showReviewModal: false, // Для модального окна отзыва
+      openOrders: [],
+      userOrders: [],
+      allOrders: [],
+      allExecutors: [],
+      workTypes: [],
+      isLoadingOrders: false,
+      showOrderModal: false,
+      detailedOrder: null,
+      showReviewModal: false,
+      orderForReview: null,
       showTestNotice: false,
-      orderForReview: null, // Заказ для отзыва
-      role: localStorage.getItem('role') || 'customer',
+      searchQuery: '',
+      searchResults: [],
+      isSearching: false,
+      searchType: 'orders', // 'orders' или 'executors'
+      statusFilter: 'all',
+      statusDropdownOpen: false,
+      workTypeFilter: 'all',
+      workTypeDropdownOpen: false,
+      currentMenu: [],
+      availableTabs: [],
+      createdChatId: null, // Добавляем состояние для ID созданного чата
+      editIco, // <-- добавил сюда
+      sortBy: 'az', // 'az' или 'za'
+      statusDropdownOpen: false,
+      workTypeDropdownOpen: false,
+      
+      // Массивы меню для разных ролей
       customerMenu: [
         { label: 'Все заказы', value: 'all', icon: ordersIcon },
         { label: 'Заказы в работе', value: 'in_progress', icon: ordersIcon },
@@ -455,19 +579,6 @@ export default {
         { label: 'Завершённые заказы', value: 'done', icon: ordersIcon },
         { label: 'Сообщения', value: 'messages', icon: ordersIcon },
       ],
-      currentTab: localStorage.getItem('currentTab') || 'all',
-      statusFilter: 'all',
-      statusOptions: [
-        { value: 'pending_approval', label: 'На согласовании' },
-        { value: 'in_progress', label: 'В работе' },
-        { value: 'revision', label: 'На доработке' }
-      ],
-      workTypes: [],
-      workTypeFilter: 'all',
-      editIco, // <-- добавил сюда
-      sortBy: 'az', // 'az' или 'za'
-      statusDropdownOpen: false,
-      workTypeDropdownOpen: false,
 
       searchQuery: '',
       searchResults: {
@@ -477,6 +588,19 @@ export default {
       isSearching: false,
       showDropdown: false,
       showMobileMenu: false, // Для мобильного выпадающего меню
+      
+      // Опции для фильтров
+      statusOptions: [
+        { value: 'pending_approval', label: 'На согласовании' },
+        { value: 'in_progress', label: 'В работе' },
+        { value: 'revision', label: 'На доработке' }
+      ],
+      
+      // Флаг для модального окна создания заказа
+      showCreateOrderModal: false,
+      
+      // Флаг загрузки для модального окна заказа
+      loadingOrder: false,
     }
   },
   computed: {
@@ -596,14 +720,23 @@ export default {
       immediate: false
     },
     role: {
-      handler() {
+      handler(newRole, oldRole) {
+        // Сохраняем текущую вкладку при смене роли
+        const currentTab = this.currentTab;
+        
         this.fetchOrders();
         this.fetchAllOrdersForSearch();
         this.fetchAllExecutorsForSearch();
+        
         // Принудительно обновляем компонент при смене роли
         this.$nextTick(() => {
           this.$forceUpdate();
         });
+        
+        // Убеждаемся, что текущая вкладка осталась активной
+        if (currentTab && this.currentTab !== currentTab) {
+          this.currentTab = currentTab;
+        }
       },
       immediate: true
     }
@@ -934,11 +1067,17 @@ export default {
       this.afterMutation();
     },
     onChatOpened(chat) {
+      // Сохраняем ID созданного чата
+      this.createdChatId = chat.id;
       
       // закрываем модалку и показываем вкладку сообщений
       this.showOrderModal = false;
       this.saveCurrentTab('messages');
-      // Можно дополнительно прокинуть chatId в ChatInterface через состояние/хранилище
+      
+      // Очищаем ID чата через небольшую задержку, чтобы ChatInterface успел его обработать
+      setTimeout(() => {
+        this.createdChatId = null;
+      }, 1000);
     },
     onOrderTaken(order) {
       // Заказ взят исполнителем, закрываем модалку и обновляем данные
@@ -1023,14 +1162,8 @@ export default {
       this.role = role;
       localStorage.setItem('role', role);
       
-      // Проверяем, доступна ли текущая вкладка для новой роли
-      const isCurrentTabAvailable = this.availableTabs.some(item => item.value === this.currentTab);
-      
-      // Если текущая вкладка недоступна для новой роли, переключаемся на подходящую
-      if (!isCurrentTabAvailable) {
-        // Для всех ролей по умолчанию открываем "Все заказы"
-        this.saveCurrentTab('all');
-      }
+      // Сохраняем текущую вкладку при смене роли
+      const currentTab = this.currentTab;
       
       // Обновляем данные пользователя при смене роли
       await this.updateUserDataForRole(role);
@@ -1043,8 +1176,13 @@ export default {
         this.$forceUpdate();
       });
       
-      // Перезагружаем заказы при смене роли
+      // Перезагружаем заказы при смене роли, но сохраняем текущую вкладку
       this.fetchOrders();
+      
+      // Убеждаемся, что текущая вкладка осталась активной
+      if (currentTab && this.currentTab !== currentTab) {
+        this.currentTab = currentTab;
+      }
     },
     saveCurrentTab(tab) {
       this.currentTab = tab;
@@ -1095,7 +1233,7 @@ export default {
       
       // Восстанавливаем активную вкладку
       const savedTab = localStorage.getItem('currentTab');
-      if (savedTab && this.isTabAvailable(savedTab)) {
+      if (savedTab && ['all', 'in_progress', 'done', 'messages'].includes(savedTab)) {
         this.currentTab = savedTab;
       } else {
         // Если сохраненная вкладка недоступна, используем "Все заказы" по умолчанию
@@ -1106,14 +1244,15 @@ export default {
       
       // Убеждаемся, что меню корректно инициализировано
       this.$nextTick(() => {
-        if (this.currentMenu && this.currentMenu.length > 0) {
-          this.$forceUpdate();
-        }
-      });
-      
-      // Принудительно обновляем компонент после восстановления состояния
-      this.$nextTick(() => {
+        // Принудительно обновляем компонент после восстановления состояния
         this.$forceUpdate();
+        
+        // Дополнительная проверка через небольшую задержку
+        setTimeout(() => {
+          if (this.currentMenu && this.currentMenu.length > 0) {
+            this.$forceUpdate();
+          }
+        }, 100);
       });
     },
     goToPortfolio() {
@@ -1559,6 +1698,38 @@ export default {
     onChatOpened() {
       this.currentTab = 'messages';
     },
+    
+    // Методы для footer
+    openSupportChat() {
+      // Открываем чат с техподдержкой
+      this.saveCurrentTab('messages');
+      // Можно добавить логику для открытия конкретного чата с поддержкой
+      alert('Чат с техподдержкой будет открыт в разделе "Сообщения"');
+    },
+    
+    openFAQ() {
+      alert('FAQ будет добавлен в ближайшее время');
+    },
+    
+    openTerms() {
+      alert('Пользовательское соглашение будет добавлено в ближайшее время');
+    },
+    
+    openPrivacy() {
+      alert('Политика конфиденциальности будет добавлена в ближайшее время');
+    },
+    
+    openRefund() {
+      alert('Политика возвратов будет добавлена в ближайшее время');
+    },
+    
+    openTelegram() {
+      window.open('https://t.me/suri_task', '_blank');
+    },
+    
+    openVK() {
+      window.open('https://vk.com/suri_task', '_blank');
+    },
   }
 }
 </script>
@@ -1573,6 +1744,9 @@ export default {
 }
 .dashboard-bg {
   background: #071727;
+}
+.dashboard-main-content {
+  flex: 1;
 }
 .dashboard-container {
   min-height: 80vh;
@@ -1743,33 +1917,7 @@ export default {
   flex-direction: column;
   gap: 0.5rem;
 }
-.role-switcher {
-  background: #16243a;
-  border-radius: 1.1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.15rem 0.15rem;
-  margin-bottom: 0.7rem;
-  gap: 0.3rem;
-}
-.role-btn {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: #b0b8c1;
-  font-weight: 600;
-  font-size: 1rem;
-  border-radius: 1rem;
-  padding: 0.45rem 1.1rem;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  margin: 0 0.1rem;
-}
-.role-btn.active {
-  background: #22304a;
-  color: #fff;
-}
+
 .logout-btn {
   font-size: 1rem;
   font-weight: 500;
@@ -1808,38 +1956,7 @@ export default {
   align-items: center;
   justify-content: center;
 }
-.role-switcher-oval {
-  background: #16243a;
-  border-radius: 2.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.18rem 0.18rem;
-  margin-bottom: 0.7rem;
-  gap: 0.15rem;
-  width: 100%;
-  box-sizing: border-box;
-}
-.role-btn-oval {
-  flex: 1 1 0;
-  background: transparent;
-  border: none;
-  color: #b0b8c1;
-  font-weight: 600;
-  font-size: 1.1rem;
-  border-radius: 2rem;
-  padding: 0.7rem 0;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  margin: 0;
-  min-width: 0;
-}
-.role-btn-oval.active {
-  background: #22304a;
-  color: #fff;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-}
+
 /* Одинаковый стиль для обеих кнопок */
 .menu-action-btn {
   width: 100%;
@@ -2423,37 +2540,7 @@ export default {
   padding-left: 4px;
 }
 
-.role-switcher-compact {
-  display: flex;
-  background: #16243a;
-  border-radius: 12px;
-  padding: 4px;
-  gap: 4px;
-}
 
-.role-btn-compact {
-  flex: 1;
-  padding: 8px 12px;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  color: #9ca3af;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.role-btn-compact.active {
-  background: linear-gradient(135deg, #146AF1, #3b82f6);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(20, 106, 241, 0.3);
-}
-
-.role-btn-compact:hover:not(.active) {
-  background: #22304a;
-  color: #d1d5db;
-}
 
 .mobile-nav-items {
   display: flex;
@@ -2603,6 +2690,246 @@ export default {
   
   .nav-item:not(.active) {
     color: #9ca3af;
+  }
+}
+
+/* Стили для Footer */
+.dashboard-footer {
+  background: linear-gradient(135deg, #0D1F31 0%, #16243a 100%);
+  border-top: 1px solid #22304a;
+  padding: 40px 0 20px 0;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.footer-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 40px;
+  margin-bottom: 30px;
+}
+
+.footer-brand {
+  max-width: 300px;
+}
+
+.footer-logo {
+  margin-bottom: 16px;
+}
+
+.logo-text {
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.footer-description {
+  color: #9ca3af;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.footer-links {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+}
+
+.footer-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-section-title {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.footer-section-title::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  width: 30px;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+  border-radius: 1px;
+}
+
+.footer-links-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footer-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #9ca3af;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  padding: 6px 0;
+  border-radius: 6px;
+}
+
+.footer-link:hover {
+  color: #3b82f6;
+  transform: translateX(4px);
+}
+
+.footer-link-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.footer-link:hover .footer-link-icon {
+  opacity: 1;
+}
+
+.footer-bottom {
+  border-top: 1px solid #22304a;
+  padding-top: 20px;
+}
+
+.footer-bottom-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.footer-copyright {
+  color: #6b7280;
+  font-size: 13px;
+  margin: 0;
+}
+
+.footer-social {
+  display: flex;
+  gap: 12px;
+}
+
+.social-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #22304a;
+  border-radius: 8px;
+  color: #9ca3af;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.social-link:hover {
+  background: #3b82f6;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.social-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Адаптивные стили для footer */
+@media (max-width: 1024px) {
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  .footer-brand {
+    max-width: none;
+    text-align: center;
+  }
+  
+  .footer-links {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-footer {
+    padding: 30px 0 15px 0;
+    margin-top: 40px;
+  }
+  
+  .footer-container {
+    padding: 0 15px;
+  }
+  
+  .footer-content {
+    gap: 25px;
+  }
+  
+  .footer-links {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+  
+  .footer-bottom-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+  }
+  
+  .footer-social {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-footer {
+    padding: 25px 0 15px 0;
+  }
+  
+  .footer-container {
+    padding: 0 10px;
+  }
+  
+  .logo-text {
+    font-size: 24px;
+  }
+  
+  .footer-description {
+    font-size: 13px;
+  }
+  
+  .footer-section-title {
+    font-size: 15px;
+  }
+  
+  .footer-link {
+    font-size: 13px;
+  }
+  
+  .footer-copyright {
+    font-size: 12px;
   }
 }
 </style>

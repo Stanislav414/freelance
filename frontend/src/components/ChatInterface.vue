@@ -45,7 +45,10 @@ import ChatWindow from './ChatWindow.vue'
 export default {
   name: 'ChatInterface',
   components: { ChatList, ChatWindow },
-  props: { currentRole: { type: String, required: true, default: 'customer' } },
+  props: { 
+    currentRole: { type: String, required: true, default: 'customer' },
+    createdChatId: { type: Number, default: null }
+  },
   data() { 
     return { 
       selectedChat: null,
@@ -66,6 +69,17 @@ export default {
                   this.$refs.chatList.fetchChats();
                 }
               });
+            },
+            immediate: true
+          },
+          createdChatId: {
+            handler(newChatId) {
+              if (newChatId && this.$refs.chatList) {
+                // Если передан ID созданного чата, выбираем его
+                this.$nextTick(() => {
+                  this.$refs.chatList.selectChatById(newChatId);
+                });
+              }
             },
             immediate: true
           }
@@ -102,6 +116,31 @@ export default {
 .tab .muted{color:#95a7c2;font-weight:700}
 .chat-layout { display:grid; grid-template-columns: 320px 1fr; height:calc(100% - 60px); overflow:hidden }
 .chat-list-panel { background:#0D1F31; border-right:1px solid #22304a; overflow-y:auto; overflow-x:hidden }
+
+/* Стилизация скроллбара для Webkit браузеров (Chrome, Safari, Edge) */
+.chat-list-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-list-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-list-panel::-webkit-scrollbar-thumb {
+  background: rgba(34, 48, 74, 0.6);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.chat-list-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 48, 74, 0.8);
+}
+
+/* Скрываем скроллбар для Firefox */
+.chat-list-panel {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 48, 74, 0.6) transparent;
+}
 .chat-window-panel { display:flex; flex-direction:column; height:100%; overflow:hidden }
 
 /* Мобильная адаптация для чата */

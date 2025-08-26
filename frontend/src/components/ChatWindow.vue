@@ -309,6 +309,31 @@ export default {
   overflow-y: auto;
 }
 
+/* Стилизация скроллбара для Webkit браузеров (Chrome, Safari, Edge) */
+.messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+  background: rgba(34, 48, 74, 0.6);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 48, 74, 0.8);
+}
+
+/* Скрываем скроллбар для Firefox */
+.messages-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 48, 74, 0.6) transparent;
+}
+
 .message-input-container {
   flex-shrink: 0;
 }

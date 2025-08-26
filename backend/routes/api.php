@@ -3,9 +3,16 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PasswordResetController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+// Восстановление пароля
+Route::post('/password/send-code', [PasswordResetController::class, 'sendResetCode']);
+Route::post('/password/verify-code', [PasswordResetController::class, 'verifyCode']);
+Route::post('/password/reset', [PasswordResetController::class, 'resetPassword']);
+Route::post('/password/validate', [PasswordResetController::class, 'validatePassword']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/user', [AuthController::class, 'user']);

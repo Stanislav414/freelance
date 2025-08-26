@@ -70,10 +70,15 @@
                         <p class="text-sm text-gray-400">Выберите предпочитаемый язык</p>
                       </div>
                     </div>
-                    <select v-model="settings.language" @change="saveSettings" class="bg-[#0D1F31] border border-[#22304a] rounded-lg px-3 py-2 text-sm">
-                      <option value="ru">Русский</option>
-                      <option value="en">English</option>
-                    </select>
+                    <UnifiedSwitcher
+                      v-model="settings.language"
+                      type="dropdown"
+                      :options="[
+                        { value: 'ru', label: 'Русский' },
+                        { value: 'en', label: 'English' }
+                      ]"
+                      @update:modelValue="saveSettings"
+                    />
                   </div>
 
                   <div class="flex items-center justify-between p-4 bg-[#19223a] rounded-xl">
@@ -86,10 +91,11 @@
                         <p class="text-sm text-gray-400">Получать уведомления о заказах</p>
                       </div>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" class="sr-only peer" v-model="settings.enableNotifications" @change="saveSettings">
-                      <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                    </label>
+                    <UnifiedSwitcher
+                      v-model="settings.enableNotifications"
+                      type="toggle"
+                      @update:modelValue="saveSettings"
+                    />
                   </div>
 
                   <div class="flex items-center justify-between p-4 bg-[#19223a] rounded-xl">
@@ -102,10 +108,11 @@
                         <p class="text-sm text-gray-400">Использовать темную тему</p>
                       </div>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" class="sr-only peer" v-model="settings.darkTheme" @change="applyThemeAndSave">
-                      <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                    </label>
+                    <UnifiedSwitcher
+                      v-model="settings.darkTheme"
+                      type="toggle"
+                      @update:modelValue="applyThemeAndSave"
+                    />
                   </div>
 
                   <div class="flex items-center justify-between p-4 bg-[#19223a] rounded-xl">
@@ -118,10 +125,11 @@
                         <p class="text-sm text-gray-400">Скрыть профиль от других пользователей</p>
                       </div>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" class="sr-only peer" v-model="settings.hiddenProfile" @change="saveSettings">
-                      <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                    </label>
+                    <UnifiedSwitcher
+                      v-model="settings.hiddenProfile"
+                      type="toggle"
+                      @update:modelValue="saveSettings"
+                    />
                   </div>
                 </div>
               </div>
@@ -259,10 +267,11 @@
                         <p class="text-sm text-gray-400">Получать уведомления о заказах</p>
                       </div>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" class="sr-only peer" v-model="settings.orderNotifications" @change="saveSettings">
-                      <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                    </label>
+                    <UnifiedSwitcher
+                      v-model="settings.orderNotifications"
+                      type="toggle"
+                      @update:modelValue="saveSettings"
+                    />
                   </div>
 
                   <div class="flex items-center justify-between p-4 bg-[#19223a] rounded-xl">
@@ -275,10 +284,11 @@
                         <p class="text-sm text-gray-400">Использовать готовые шаблоны</p>
                       </div>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" class="sr-only peer" v-model="settings.messageTemplates" @change="saveSettings">
-                      <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                    </label>
+                    <UnifiedSwitcher
+                      v-model="settings.messageTemplates"
+                      type="toggle"
+                      @update:modelValue="saveSettings"
+                    />
                   </div>
 
                   <div class="flex items-center justify-between p-4 bg-[#19223a] rounded-xl">
@@ -291,10 +301,11 @@
                         <p class="text-sm text-gray-400">Автоматически принимать предложения</p>
                       </div>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" class="sr-only peer" v-model="settings.autoAcceptOffers" @change="saveSettings">
-                      <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                    </label>
+                    <UnifiedSwitcher
+                      v-model="settings.autoAcceptOffers"
+                      type="toggle"
+                      @update:modelValue="saveSettings"
+                    />
                   </div>
                 </div>
               </div>
@@ -336,11 +347,13 @@
 
 <script>
 import BottomNav from '../components/BottomNav.vue';
+import UnifiedSwitcher from '../components/UnifiedSwitcher.vue';
 
 export default {
   name: 'Settings',
   components: {
-    BottomNav
+    BottomNav,
+    UnifiedSwitcher
   },
   data() {
     return {
@@ -503,10 +516,7 @@ export default {
   }
 }
 
-/* Стили для переключателей */
-input[type="checkbox"]:checked + div {
-  background-color: #10b981;
-}
+
 
 /* Анимации для hover эффектов */
 .transition-colors {

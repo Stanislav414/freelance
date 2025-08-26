@@ -120,6 +120,21 @@ export default {
     },
     getOrderStatusText(status){ switch(status){case 'open':return 'Открыт';case 'pending_approval':return 'На согласовании';case 'in_progress':return 'В работе';case 'pending_review':return 'На проверке';case 'revision':return 'На доработке';case 'completed':return 'Завершен';case 'cancelled':return 'Отменен';case 'disputed':return 'Спор';default:return 'Новый'}},
     selectChat(chat){ this.$emit('chat-selected', chat) },
+    selectChatById(chatId) {
+      // Находим чат по ID и выбираем его
+      const chat = this.chats.find(c => c.id === chatId);
+      if (chat) {
+        this.$emit('chat-selected', chat);
+      } else {
+        // Если чат не найден в текущем списке, обновляем список и пробуем снова
+        this.fetchChats().then(() => {
+          const chat = this.chats.find(c => c.id === chatId);
+          if (chat) {
+            this.$emit('chat-selected', chat);
+          }
+        });
+      }
+    },
     getInitials(user){ if(!user?.name) return '?'; return user.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2) },
     formatTime(ts){ if(!ts) return ''; const d=new Date(ts), now=new Date(), h=(now-d)/36e5; if(h<24) return d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}); if(h<48) return 'Вчера'; return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}) },
     getWorkTypeName(w){ if(!w) return 'Не указан'; if(typeof w==='object'&&w.name) return w.name; if(typeof w==='string') return w; return 'Не указан' },
@@ -135,6 +150,31 @@ export default {
 
 <style scoped>
 .chat-list-container.redesigned{height:100%;padding:12px;background:#0D1F31;overflow-y:auto}
+
+/* Стилизация скроллбара для Webkit браузеров (Chrome, Safari, Edge) */
+.chat-list-container.redesigned::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-list-container.redesigned::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-list-container.redesigned::-webkit-scrollbar-thumb {
+  background: rgba(34, 48, 74, 0.6);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+.chat-list-container.redesigned::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 48, 74, 0.8);
+}
+
+/* Скрываем скроллбар для Firefox */
+.chat-list-container.redesigned {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 48, 74, 0.6) transparent;
+}
 .nav{display:flex;gap:16px;margin:2px 6px 12px}
 .nav-link{background:none;border:none;color:#aeb9cd;font-weight:800;font-size:14px;cursor:pointer;padding:6px 0;position:relative}
 .nav-link.active{color:#fff}

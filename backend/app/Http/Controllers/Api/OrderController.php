@@ -63,7 +63,7 @@ class OrderController extends Controller
             'work_type_id' => 'nullable|exists:work_types,id',
             'title' => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'deadline' => 'nullable|date',
+            'deadline' => 'nullable|date|after:today',
             'budget' => 'nullable|numeric|min:0',
             'attributes' => 'array',
             'attributes.*.attribute_type_id' => 'nullable|exists:order_attribute_types,id',
