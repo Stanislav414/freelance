@@ -2,30 +2,30 @@
   <div class="h-screen flex flex-col md:flex-row">
 
     <!-- Левая часть -->
-    <div class="hidden md:flex w-1/2 bg-[#146AF1] flex-col justify-center p-8 text-white relative">
+    <div class="hidden md:flex w-1/2 bg-[#146AF1] flex-col justify-center p-4 md:p-8 text-white relative">
 
-      <div class="text-center mt-4 mb-1">
-        <h1 class="text-2xl lg:text-4xl font-bold leading-tight mb-2 text-white drop-shadow-2xl">
+      <div class="text-center mt-2 mb-1">
+        <h1 class="text-lg md:text-2xl lg:text-5xl font-bold leading-tight mb-1 md:mb-3 text-white drop-shadow-2xl">
           Когда дедлайн был "ещё вчера"
         </h1>
-        <p class="text-sm lg:text-lg leading-relaxed text-white drop-shadow-lg">
+        <p class="text-xs md:text-base lg:text-xl leading-relaxed text-white drop-shadow-lg">
           Найдите дизайнера или монтажёра быстрее, чем приедет такси!
         </p>
       </div>
 
-      <div class="mt-8 mb-4 flex justify-center items-center ">
+      <div class="mt-4 md:mt-10 mb-2 md:mb-6 flex justify-center items-center">
         <img
             src="@/assets/cards.png"
             alt="Карточки"
-            class="w-3/4 h-auto"
+            class="w-2/3 md:w-4/5 h-auto"
         >
       </div>
 
-      <div class="text-center mt-4 mb-1">
-        <h2 class="text-xl lg:text-3xl font-bold mb-3 text-white drop-shadow-2xl">
+      <div class="text-center mt-2 md:mt-6 mb-1">
+        <h2 class="text-lg md:text-2xl lg:text-4xl font-bold text-white drop-shadow-2xl mb-1 md:mb-3">
           SuriTask — умная фриланс платформа
         </h2>
-        <p class="text-xs lg:text-base leading-relaxed text-white drop-shadow-lg max-w-xs lg:max-w-xl mx-auto">
+        <p class="text-xs md:text-sm lg:text-lg leading-relaxed text-white drop-shadow-lg max-w-xs md:max-w-sm lg:max-w-xl mx-auto">
           где заказчики мгновенно получают готовую подборку подходящих исполнителей, а фрилансеры «в онлайне» первыми берут горящие заказы.
         </p>
       </div>

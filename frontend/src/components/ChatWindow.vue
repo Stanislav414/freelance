@@ -117,7 +117,7 @@
             <textarea
               v-model="newMessage"
               @keydown.enter.prevent="handleEnterKey"
-              @input="autoResize"
+              @input="handleInput"
               placeholder="Начните писать сообщение..."
               class="w-full bg-[#0D1F31] text-white border-2 border-[#22304a] rounded-xl px-4 py-3 resize-none focus:border-blue-500 focus:outline-none transition-all duration-200 text-sm min-h-[48px] max-h-[120px]"
               rows="1"
@@ -162,11 +162,36 @@ export default {
       sending: false, 
       currentUserId: null, 
       showCategoryMenu: false,
-      showReviewModal: false
+      showReviewModal: false,
+      chatDrafts: {} // Сохраняем черновики для каждого чата
     }
   },
   watch: {
-    chat: { handler: 'loadMessages', immediate: true },
+    chat: { 
+      handler(newChat, oldChat) {
+        // Сохраняем текст предыдущего чата
+        if (oldChat && this.newMessage.trim()) {
+          this.chatDrafts[oldChat.id] = this.newMessage;
+        }
+        
+        // Загружаем сообщения нового чата
+        this.loadMessages();
+        
+        // Восстанавливаем текст для нового чата
+        if (newChat && this.chatDrafts[newChat.id]) {
+          this.newMessage = this.chatDrafts[newChat.id];
+          this.$nextTick(() => {
+            this.autoResize();
+          });
+        } else {
+          this.newMessage = '';
+          this.$nextTick(() => {
+            this.resetTextareaHeight();
+          });
+        }
+      }, 
+      immediate: true 
+    },
     messages: {
       handler() { this.$nextTick(() => this.scrollToBottom()) },
       deep: true
@@ -191,7 +216,33 @@ export default {
       }finally{ this.loading=false }
     },
     async markMessagesAsRead(){ /* больше не требуется отдельный вызов */ },
-    async sendMessage(){ if(!this.newMessage.trim()||!this.chat) return; try{ this.sending=true; const { data:newMessage } = await this.$axios.post(`/chats/${this.chat.id}/messages`,{content:this.newMessage.trim()}); this.messages.push(newMessage); this.newMessage=''; this.$nextTick(()=>{ this.scrollToBottom(); this.$refs.messageInput?.focus(); this.resetTextareaHeight(); }); this.$emit('message-sent', newMessage); this.$emit('messages-read'); setTimeout(()=>{ newMessage.status='delivered' },1000); setTimeout(()=>{ newMessage.status='read' },2000) }catch(e){ console.error('Ошибка отправки сообщения:',e); alert('Ошибка отправки сообщения') }finally{ this.sending=false }},
+    async sendMessage(){ 
+      if(!this.newMessage.trim()||!this.chat) return; 
+      try{ 
+        this.sending=true; 
+        const { data:newMessage } = await this.$axios.post(`/chats/${this.chat.id}/messages`,{content:this.newMessage.trim()}); 
+        this.messages.push(newMessage); 
+        this.newMessage=''; 
+        // Очищаем черновик после отправки
+        if (this.chatDrafts[this.chat.id]) {
+          delete this.chatDrafts[this.chat.id];
+        }
+        this.$nextTick(()=>{ 
+          this.scrollToBottom(); 
+          this.$refs.messageInput?.focus(); 
+          this.resetTextareaHeight(); 
+        }); 
+        this.$emit('message-sent', newMessage); 
+        this.$emit('messages-read'); 
+        setTimeout(()=>{ newMessage.status='delivered' },1000); 
+        setTimeout(()=>{ newMessage.status='read' },2000) 
+      }catch(e){ 
+        console.error('Ошибка отправки сообщения:',e); 
+        alert('Ошибка отправки сообщения') 
+      }finally{ 
+        this.sending=false 
+      }
+    },
     async changeCategory(category){ if(!this.chat) return; try{ await this.$axios.put(`/chats/${this.chat.id}/category`,{category}); this.chat.category=category; this.showCategoryMenu=false; this.$emit('chat-category-changed', {chatId:this.chat.id, category}); alert('Категория чата изменена') }catch(e){ console.error('Ошибка изменения категории:',e); alert('Ошибка изменения категории') }},
     getRoleText(){ if(this.chat?.other_user_role){ return this.chat.other_user_role==='customer'?'Заказчик':'Исполнитель' } const currentRole=localStorage.getItem('currentRole')||'customer'; return currentRole==='customer'?'Исполнитель':'Заказчик' },
     getOrderStatusClass(status) {
@@ -220,10 +271,22 @@ export default {
     scrollToBottom(){ const el=this.$refs.messagesContainer; if(el){ el.scrollTop=el.scrollHeight } },
     getInitials(user){ if(!user?.name) return '?'; return user.name.split(' ').map(w=>w.charAt(0)).join('').toUpperCase().slice(0,2) },
     formatTime(ts){ if(!ts) return ''; const d=new Date(ts), now=new Date(), h=(now-d)/36e5; if(h<24) return d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}); if(h<48) return 'Вчера '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}); return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) },
-    getWorkTypeName(w){ if(!w) return 'Не указан'; if(typeof w==='object'&&w.name) return w.name; if(typeof w==='string') return w; return 'Не указан' }
-    ,getMessageStatusLabel(){ return '' }
-    ,getAsset(name){ try{ return new URL(`../assets/${name}`, import.meta.url).href }catch{ return '' } }
-    ,autoResize(){
+    getWorkTypeName(w){ if(!w) return 'Не указан'; if(typeof w==='object'&&w.name) return w.name; if(typeof w==='string') return w; return 'Не указан' },
+    getMessageStatusLabel(){ return '' },
+    getAsset(name){ try{ return new URL(`../assets/${name}`, import.meta.url).href }catch{ return '' } },
+    handleInput() {
+      // Сохраняем черновик при вводе
+      if (this.chat && this.newMessage.trim()) {
+        this.chatDrafts[this.chat.id] = this.newMessage;
+      } else if (this.chat && !this.newMessage.trim() && this.chatDrafts[this.chat.id]) {
+        // Удаляем черновик если поле пустое
+        delete this.chatDrafts[this.chat.id];
+      }
+      
+      // Автоматически изменяем размер textarea
+      this.autoResize();
+    },
+    autoResize(){
       const el = this.$refs.messageInput;
       if (el) {
         el.style.height = 'auto';
