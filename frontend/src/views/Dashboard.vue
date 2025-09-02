@@ -146,17 +146,22 @@
 
       <!-- Центральная часть -->
       <main class="flex-1 flex flex-col gap-8">
-        <div class="flex items-center gap-4 justify-between search-container">
-          <div class="relative flex-1 search-dropdown-container">
-            <input 
-              v-model="searchQuery" 
-              type="text" 
-              placeholder="Поиск" 
-              class="bg-[#0D1F31] text-white px-5 py-3 rounded-4xl w-full focus:outline-none focus:ring-2 focus:ring-blue-500 search-input" 
-              @input="handleSearchInput"
-              @focus="showDropdown = true"
-              @blur="hideDropdown"
-            />
+        <div class="search-container">
+          <div class="relative search-dropdown-container">
+            <div class="search-input-container">
+              <input 
+                v-model="searchQuery" 
+                type="text" 
+                placeholder="Поиск" 
+                class="search-input-field" 
+                @input="handleSearchInput"
+                @focus="showDropdown = true"
+                @blur="hideDropdown"
+              />
+              <button @click="handleSearchButton" class="search-btn-inside">
+                Поиск
+              </button>
+            </div>
             
             <!-- Выпадающий список результатов -->
             <div v-if="showDropdown && (searchResults.orders.length > 0 || searchResults.executors.length > 0)" 
@@ -204,9 +209,6 @@
               </div>
             </div>
           </div>
-          <button @click="handleSearchButton" class="search-btn btn-primary">
-            Поиск
-          </button>
         </div>
         <section>
           <div v-if="currentTab !== 'messages'" class="orders-header-row mb-4 flex items-center justify-between gap-4">
@@ -2186,6 +2188,70 @@ export default {
   background: #1d4ed8;
 }
 
+/* Стили для единой поисковой строки */
+.search-container {
+  width: 100%;
+  max-width: 600px;
+}
+
+.search-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #0D1F31;
+  border-radius: 50px;
+  border: 2px solid #22304a;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-input-container:focus-within {
+  border-color: #146AF1;
+  box-shadow: 0 0 0 3px rgba(20, 106, 241, 0.1);
+}
+
+.search-input-field {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: white;
+  padding: 16px 20px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.search-input-field::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.search-btn-inside {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #146AF1;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+  border-radius: 25px;
+  z-index: 10;
+}
+
+.search-btn-inside:hover {
+  background: #0d5cd9;
+}
+
+.search-btn-inside:active {
+  background: #0b4bb8;
+}
+
 /* Стили для выпадающего поиска */
 .search-dropdown-container {
   position: relative;
@@ -2644,25 +2710,28 @@ export default {
   
   /* Мобильные стили для поиска */
   .search-container {
-    flex-direction: column;
-    gap: 12px;
+    width: 100%;
+    max-width: none;
   }
   
   .search-dropdown-container {
     width: 100%;
   }
   
-  .search-input {
-    width: 100%;
+  .search-input-container {
+    border-radius: 25px;
+  }
+  
+  .search-input-field {
     padding: 14px 16px;
     font-size: 16px;
   }
   
-  .search-btn {
-    width: 100%;
-    padding: 12px 16px;
-    font-size: 14px;
-    border-radius: 8px;
+  .search-btn-inside {
+    padding: 10px 16px;
+    font-size: 13px;
+    border-radius: 20px;
+    right: 6px;
   }
   
   /* Мобильные стили для нижней навигации */
